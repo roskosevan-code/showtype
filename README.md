@@ -100,7 +100,7 @@ docs/
   phase0-scores.md              # (generated) Phase 0 per-show tables + Flags
   phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
-  catalog-scores.csv            # (generated) 124-show catalog for retrieval; load with `backfill --csv`
+  catalog-scores.csv            # (generated) 231-show catalog for retrieval; load with `backfill --csv`
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)

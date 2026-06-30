@@ -32,9 +32,9 @@ taste-index score-batch --file shows.txt --skip-existing   # Batches API: 50% co
 batch ends, then loads the results — the right tool for a few-hundred-show run.
 `scripts/catalog-shows.txt` is a starter list of ~90 shows spanning the axis space.
 
-**Done — 124-show catalog.** The starter list was scored via `score-batch` (94/94
-succeeded) and the full catalog is committed at `docs/catalog-scores.csv`
-(124 shows). Load it without re-spending:
+**Done — 231-show catalog.** Two `score-batch` rounds (94/94 then 107/107 succeeded,
+from `scripts/catalog-shows.txt` and `catalog-shows-2.txt`) built a 231-show catalog,
+committed at `docs/catalog-scores.csv`. Load it without re-spending:
 
 ```bash
 taste-index init-db && taste-index backfill --csv docs/catalog-scores.csv
