@@ -5,6 +5,8 @@
     python -m taste_index backfill          # load docs/baseline-scores.csv into the DB
     python -m taste_index score "The Wire"  # score one show via the Claude API
     python -m taste_index score-all --file shows.txt --skip-existing  # batch-score many
+    python -m taste_index similar "The Wire"           # nearest shows in taste-space
+    python -m taste_index query --where "sweep>=8" --where "register<=4"   # filter by profile
     python -m taste_index show "The Wire"   # print stored scores for a show
 """
 from __future__ import annotations
@@ -249,6 +251,57 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def _vector_header() -> str:
+    from .space import AXIS_CODES
+
+    cols = " ".join(f"{c:>4}" for c in AXIS_CODES)
+    return cols
+
+
+def _vector_row(vec: dict[int, int]) -> str:
+    return " ".join(f"{vec[i]:>4}" for i in sorted(vec))
+
+
+def cmd_similar(args: argparse.Namespace) -> int:
+    from . import space
+
+    conn = db.connect(args.db)
+    try:
+        neighbors = space.nearest(conn, args.title, n=args.n)
+    except (KeyError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    target = space.show_vectors(conn)[args.title]
+    print(f"Nearest {args.n} shows to {args.title!r} in taste-space:\n")
+    print(f"{'':<28} {_vector_header()}   dist")
+    print(f"{args.title:<28} {_vector_row(target)}      —")
+    print("-" * 72)
+    for title, dist, vec in neighbors:
+        print(f"{title:<28} {_vector_row(vec)}  {dist:>5.2f}")
+    return 0
+
+
+def cmd_query(args: argparse.Namespace) -> int:
+    from . import space
+
+    conn = db.connect(args.db)
+    try:
+        constraints = [space.parse_constraint(w, conn) for w in args.where]
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    if not constraints:
+        print("Give at least one --where constraint, e.g. --where 'sweep>=8'.", file=sys.stderr)
+        return 1
+    matches = space.query(conn, constraints)
+    print(f"{len(matches)} shows match {' and '.join(args.where)}:\n")
+    print(f"{'':<28} {_vector_header()}")
+    print("-" * 66)
+    for title, vec in matches:
+        print(f"{title:<28} {_vector_row(vec)}")
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     rows = db.get_show_scores(conn, args.title)
@@ -296,6 +349,18 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--rubric", default=DEFAULT_RUBRIC)
     sp.add_argument("--model", default="claude-opus-4-8")
     sp.set_defaults(func=cmd_diff)
+
+    sp = sub.add_parser("similar", help="nearest shows in taste-space (no API call)")
+    sp.add_argument("title")
+    sp.add_argument("-n", type=int, default=5, help="how many neighbors")
+    sp.set_defaults(func=cmd_similar)
+
+    sp = sub.add_parser("query", help="find shows matching an axis profile (no API call)")
+    sp.add_argument(
+        "--where", action="append", default=[],
+        help="axis constraint, e.g. 'sweep>=8' or 'register<=4' (repeatable)",
+    )
+    sp.set_defaults(func=cmd_query)
 
     sp = sub.add_parser("show", help="print stored scores for a show")
     sp.add_argument("title")

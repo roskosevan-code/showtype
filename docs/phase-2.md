@@ -1,0 +1,37 @@
+# Phase 2 — Use the Coordinates
+
+Phase 1 built the coordinate system (eight descriptive axes) and a way to place
+shows in it (scorer + DB). Phase 2 is about **using those coordinates**: turning
+the eight-axis vectors into retrieval — similarity and profile search — and
+scaling the catalog so the space is dense enough to be useful.
+
+The key property: the eight rubric axes already *are* an interpretable 0–10 vector
+space. Similarity is just distance in that space — no embeddings, no extra model.
+
+## Done — retrieval layer
+
+- `taste_index/space.py`: vectors, Euclidean distance, k-NN, and profile query.
+- `taste-index similar "<show>" [-n N]` — nearest shows in taste-space.
+- `taste-index query --where "sweep>=8" --where "register<=4"` — filter by axis profile
+  (axis tokens resolve by slug or substring: `sweep`, `auth`, `veris`, …).
+
+Both run over the stored scores with no API call. Sanity checks hold: The Wire's
+nearest neighbour is We Own This City (the other Simon Baltimore systems show);
+Breaking Bad's are Happy Valley / Ozark / Better Call Saul (propulsive crime).
+
+## Next — scale the catalog
+
+Retrieval is only as good as the catalog is dense. Grow it with `score-all`:
+
+```bash
+taste-index score-all --file shows.txt --skip-existing
+```
+
+A few hundred shows makes neighbours and profile queries genuinely useful. For
+larger runs the Claude **Batches API** (50% cost, async) is the natural optimization.
+
+## Deferred
+
+- **Quality layer** — the rubric notes axes are descriptive and "quality is tracked
+  separately." A separate quality/rating dimension (and a user taste-profile to match
+  against) is the natural Phase 3.

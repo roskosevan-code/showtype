@@ -44,7 +44,13 @@ tighten the rubric → refresh. The diff loop drove three rubric refinements (Re
 baseline agrees with the original hand-scores 96% within one point with no systematic
 skew. See **Usage** below.
 
-## Usage (Phase 1)
+**Phase 2 — Use the coordinates (in progress).** The eight axes already form an
+interpretable vector space, so similarity is just distance in it. `similar` returns a
+show's nearest neighbours and `query` filters by axis profile — both over the stored
+scores, no API call. Next: scale the catalog with `score-all`. See
+[`docs/phase-2.md`](docs/phase-2.md).
+
+## Usage
 
 ```bash
 pip install -e .                      # installs anthropic + pydantic
@@ -57,6 +63,10 @@ python -m taste_index score "The Wire"   # score one show via the Claude API, st
 python -m taste_index score-all "Succession" "Mad Men" --skip-existing   # batch-score new shows
 python -m taste_index show "The Wire"    # print stored scores for a show
 python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the stored baseline (no save)
+
+# Phase 2 — retrieval over the 8-axis space (no API calls):
+python -m taste_index similar "The Wire" -n 5                          # nearest shows in taste-space
+python -m taste_index query --where "sweep>=8" --where "register<=4"   # filter by axis profile
 ```
 
 **Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
@@ -92,6 +102,7 @@ taste_index/                    # Phase 1 package
   schema.sql                    # axis / show / score tables
   db.py                         # SQLite access layer
   scorer.py                     # Claude-API scorer (structured outputs)
-  cli.py                        # init-db / axes / score / show
+  space.py                      # taste-space retrieval: k-NN + profile query
+  cli.py                        # init-db / axes / backfill / score / score-all / diff / show / similar / query
 pyproject.toml                  # package metadata + deps (anthropic, pydantic)
 ```
