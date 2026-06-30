@@ -34,8 +34,26 @@ shows reproduce the rubric's anchor table exactly. Both files are regenerated fr
 single source of truth, [`scripts/gen_phase0.py`](scripts/gen_phase0.py), so the table
 and CSV never drift — edit the scores there and re-run `python3 scripts/gen_phase0.py`.
 
-**Next:** review the output against your own read of these shows (the gate). If it holds
-up, proceed to Phase 1.
+**Phase 1 — Data model + scoring pipeline (in progress).** A SQLite data model
+(`axis` / `show` / `score`) whose `axis` table is seeded *verbatim* from
+`docs/rubric.md`, plus a scorer that rates a show on all eight axes via the Claude
+API (Claude Opus 4.8, adaptive thinking, structured outputs). See **Usage** below.
+
+## Usage (Phase 1)
+
+```bash
+pip install -e .                      # installs anthropic + pydantic
+python -m taste_index init-db         # create taste_index.db, seed the 8 axes from docs/rubric.md
+python -m taste_index axes            # list the seeded axes
+
+export ANTHROPIC_API_KEY=sk-ant-...   # required for scoring
+python -m taste_index score "The Wire"   # score one show via the Claude API, store the result
+python -m taste_index show "The Wire"    # print stored scores for a show
+```
+
+The rubric is the single source of truth: the eight axes are seeded into the `axis`
+table and the full rubric text is handed to the scorer as context. Revise
+`docs/rubric.md` (not code) when an axis is mis-reading, then re-run `init-db`.
 
 If the scores are largely sane and justifications concrete, proceed to **Phase 1**:
 seed an `Axis` table from `docs/rubric.md` and begin building the scoring pipeline. If
@@ -52,4 +70,11 @@ docs/
   phase0-scores.csv             # (generated) Phase 0 scores, 240 rows
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
+taste_index/                    # Phase 1 package
+  rubric.py                     # parse the 8 axes out of docs/rubric.md
+  schema.sql                    # axis / show / score tables
+  db.py                         # SQLite access layer
+  scorer.py                     # Claude-API scorer (structured outputs)
+  cli.py                        # init-db / axes / score / show
+pyproject.toml                  # package metadata + deps (anthropic, pydantic)
 ```

@@ -28,6 +28,11 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
+# Local SQLite databases (regenerated via `init-db`)
+*.db
+*.sqlite
+*.sqlite3
+
 # Logs / temp
 *.log
 tmp/

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taste-index"
+version = "0.1.0"
+description = "Eight-axis TV-show characterization (The Taste Index)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.40",
+    "pydantic>=2",
+]
+
+[project.scripts]
+taste-index = "taste_index.cli:main"
+
+[tool.setuptools]
+packages = ["taste_index"]
+
+[tool.setuptools.package-data]
+taste_index = ["schema.sql"]
