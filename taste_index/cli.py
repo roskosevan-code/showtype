@@ -21,6 +21,7 @@ from .rubric import load_rubric
 
 DEFAULT_RUBRIC = "docs/rubric.md"
 DEFAULT_BASELINE_CSV = "docs/baseline-scores.csv"  # model-scored under current rubric
+DEFAULT_CATALOG_CSV = "docs/catalog-scores.csv"    # full retrieval catalog
 DEFAULT_GENRES_CSV = "docs/genres.csv"
 PHASE0_MODEL = "phase0-handscored"  # fallback when a CSV has no `model` column
 
@@ -410,7 +411,23 @@ def cmd_tag_genres(args: argparse.Namespace) -> int:
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
+    import os
+
     from . import web
+
+    # Auto-bootstrap from committed CSVs so a fresh clone is one command.
+    conn = db.connect(args.db)
+    db.init_schema(conn)
+    n_axes = conn.execute("SELECT COUNT(*) FROM axis").fetchone()[0]
+    n_shows = conn.execute("SELECT COUNT(*) FROM show").fetchone()[0]
+    if n_axes == 0 or n_shows == 0:
+        print(f"Empty DB at {args.db} — bootstrapping from committed data...", file=sys.stderr)
+        if n_axes == 0 and os.path.exists(args.rubric):
+            cmd_init_db(argparse.Namespace(db=args.db, rubric=args.rubric))
+        if n_shows == 0 and os.path.exists(DEFAULT_CATALOG_CSV):
+            cmd_backfill(argparse.Namespace(db=args.db, csv=DEFAULT_CATALOG_CSV))
+        if os.path.exists(DEFAULT_GENRES_CSV):
+            cmd_tag_genres(argparse.Namespace(db=args.db, csv=DEFAULT_GENRES_CSV))
 
     web.serve(db_path=args.db, host=args.host, port=args.port)
     return 0
@@ -491,9 +508,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--csv", default=DEFAULT_GENRES_CSV)
     sp.set_defaults(func=cmd_tag_genres)
 
-    sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps)")
+    sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps; auto-builds DB)")
     sp.add_argument("--host", default="127.0.0.1")
     sp.add_argument("--port", type=int, default=8000)
+    sp.add_argument("--rubric", default=DEFAULT_RUBRIC)
     sp.set_defaults(func=cmd_serve)
 
     sp = sub.add_parser("show", help="print stored scores for a show")

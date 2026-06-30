@@ -72,6 +72,10 @@ python -m taste_index tag-genres                                       # load ge
 python -m taste_index serve                                            # web UI at http://127.0.0.1:8000
 ```
 
+**Just want the UI?** `python -m taste_index serve` auto-builds the database from the
+committed CSVs on first run — so from a fresh clone it's a single command, no API key and
+no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
+
 The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
 nearest neighbours and recommends from a taste profile (the centroid of shows you like —
 e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon). You can
