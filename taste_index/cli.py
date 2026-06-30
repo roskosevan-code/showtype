@@ -2,18 +2,22 @@
 
     python -m taste_index init-db          # create the DB and seed the 8 axes
     python -m taste_index axes              # list the seeded axes
+    python -m taste_index backfill          # load docs/phase0-scores.csv into the DB
     python -m taste_index score "The Wire"  # score a show via the Claude API
     python -m taste_index show "The Wire"   # print stored scores for a show
 """
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 
 from . import db
 from .rubric import load_rubric
 
 DEFAULT_RUBRIC = "docs/rubric.md"
+DEFAULT_PHASE0_CSV = "docs/phase0-scores.csv"
+PHASE0_MODEL = "phase0-handscored"
 
 
 def _normalize(name: str) -> str:
@@ -88,6 +92,42 @@ def cmd_score(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_backfill(args: argparse.Namespace) -> int:
+    conn = db.connect(args.db)
+    axis_rows = db.get_axes(conn)
+    if not axis_rows:
+        print("No axes seeded. Run 'init-db' first.", file=sys.stderr)
+        return 1
+    axis_id_by_norm = {_normalize(r["name"]): int(r["id"]) for r in axis_rows}
+
+    # Group CSV rows by show.
+    by_show: dict[str, list[tuple[int, int, str, str, str]]] = {}
+    skipped: set[str] = set()
+    with open(args.csv, newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            axis_id = axis_id_by_norm.get(_normalize(r["axis"]))
+            if axis_id is None:
+                skipped.add(r["axis"])
+                continue
+            by_show.setdefault(r["show"], []).append(
+                (axis_id, int(r["value"]), r["confidence"], r["justification"], PHASE0_MODEL)
+            )
+
+    if skipped:
+        print(f"  ! unknown axes skipped: {', '.join(sorted(skipped))}", file=sys.stderr)
+
+    total = 0
+    for title, rows in by_show.items():
+        show_id = db.upsert_show(conn, title)
+        db.save_scores(conn, show_id, rows)
+        total += len(rows)
+    print(
+        f"Backfilled {len(by_show)} shows / {total} scores from {args.csv} "
+        f"(model={PHASE0_MODEL})."
+    )
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     rows = db.get_show_scores(conn, args.title)
@@ -115,6 +155,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--rubric", default=DEFAULT_RUBRIC)
     sp.add_argument("--model", default="claude-opus-4-8")
     sp.set_defaults(func=cmd_score)
+
+    sp = sub.add_parser("backfill", help="load Phase 0 hand-scores from a CSV")
+    sp.add_argument("--csv", default=DEFAULT_PHASE0_CSV)
+    sp.set_defaults(func=cmd_backfill)
 
     sp = sub.add_parser("show", help="print stored scores for a show")
     sp.add_argument("title")
