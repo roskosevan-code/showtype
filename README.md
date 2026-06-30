@@ -34,10 +34,15 @@ shows reproduce the rubric's anchor table exactly. Both files are regenerated fr
 single source of truth, [`scripts/gen_phase0.py`](scripts/gen_phase0.py), so the table
 and CSV never drift — edit the scores there and re-run `python3 scripts/gen_phase0.py`.
 
-**Phase 1 — Data model + scoring pipeline (in progress).** A SQLite data model
+**Phase 1 — Data model + scoring pipeline (complete).** A SQLite data model
 (`axis` / `show` / `score`) whose `axis` table is seeded *verbatim* from
 `docs/rubric.md`, plus a scorer that rates a show on all eight axes via the Claude
-API (Claude Opus 4.8, adaptive thinking, structured outputs). See **Usage** below.
+API (Claude Opus 4.8, adaptive thinking, structured outputs). The full loop is in
+place — seed from rubric → score (single or batch) → diff against a clean baseline →
+tighten the rubric → refresh. The diff loop drove three rubric refinements (Register
+×2, Institutional Sweep ×1), each verified on the shows that exposed it; the refreshed
+baseline agrees with the original hand-scores 96% within one point with no systematic
+skew. See **Usage** below.
 
 ## Usage (Phase 1)
 
