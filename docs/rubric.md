@@ -41,6 +41,7 @@ How far the show goes *inside* a consciousness versus observing behavior from th
 Invisible craft versus visible auteur stylization — would you recognize the show blind? This measures the **strength and distinctiveness** of the authorial presence, which can be loud *or* quiet.
 - **Low (0–2):** deliberately plain; technique effaced; wants you to forget the camera.
 - **High (8–10):** a strong, recognizable hand — whether showy (direct address, structural tricks) or quietly commanding.
+- **Distinguish from Register (axis 8):** this axis is *visual and formal* boldness; tonal/emotional pitch is register. A show can be visually maximalist yet tonally deadpan (*Severance*: high here, low there).
 - Anchors: *Mr. Robot* 10 (off-center framing, direct address, formal sleight-of-hand); *The Wire* 2 (anti-stylish on purpose); *Chernobyl* 6 / *Andor* 6 (a strong hand, quietly).
 
 ### 6. Verisimilitude (Texture)
@@ -57,9 +58,10 @@ How much the show asks of the viewer per minute — its willingness to withhold 
 - Anchors: *The Wire* 10 (tracks nothing for you); *The Expanse* 8 (many factions/names); broadcast procedurals 1–2 (by design).
 
 ### 8. Register (Tonal Control)
-Where the show sits on the **restrained ↔ operatic** spectrum — descriptive, not a quality judgment.
-- **Low (0–2):** restrained, naturalistic, understated, deadpan.
-- **High (8–10):** operatic, heightened, maximalist, melodramatic.
+Where the show sits on the **restrained ↔ operatic** spectrum of *tonal and emotional pitch* — how heightened the performances, dialogue, music, and dramatic stakes are played. Descriptive, not a quality judgment.
+- **This is tonal pitch, not visual boldness.** Stylized design, bold framing, and formal tricks belong to **Authorial Signature** (axis 5), not here. A show can have a loud, unmistakable authorial hand and still be tonally restrained — score the emotional key, not the production design. *Severance* is the test case: its symmetrical, retro-modern design is maximalist (high Authorial Signature), yet its performances and tone are deliberately muted and deadpan (low register, ~3–4).
+- **Low (0–2):** restrained, naturalistic, understated, deadpan; emotions played cool and stakes underplayed.
+- **High (8–10):** operatic, heightened, maximalist, melodramatic; emotions and stakes pitched loud.
 - **Note on "corny":** a high-register show is not automatically corny. "Corny" typically means **high register *combined with* low verisimilitude** — heightened style that hasn't been earned. High register with high verisimilitude can be superb (*Deadwood*). Whether the register is executed with command is a quality matter handled outside this number.
 - Anchors: *Chernobyl* 3 / *The Americans* 3 (restrained, controlled); *Deadwood* 8 (Shakespearean and operatic, but earned); *Peaky Blinders* 9 (operatic swagger).
 
