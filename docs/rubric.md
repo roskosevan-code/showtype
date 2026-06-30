@@ -26,8 +26,11 @@ The size of the canvas — how much world there is. Can be **geographic** (how m
 
 ### 3. Institutional Sweep
 The degree to which a **system or institution is the show's real subject** — tracing how the machine works and how people are shaped, used, and ground down by it ("systems storytelling").
-- **Distinguish from merely having an institutional setting.** A show can be set in a police force without being *about* the institution. The test: is the institution itself effectively a character with its own logic?
+- **Distinguish from merely having an institutional setting.** A show can be set in — or built around — a police force, a law firm, or a cartel without being *about* the institution. The test: does the show trace the institution's *own* self-perpetuating logic, independent of the leads, or is the institution a backdrop and a source of pressure on characters whose choices and relationships are the real drama?
+- **The swap test:** if you swapped the institution for a different backdrop, would it still be fundamentally the same story? If yes, the drama is the protagonist's arc and this scores low. A protagonist merely *operating within* a system is not institutional sweep; the system must be a character with its own logic the show follows.
 - **Low (0–2):** institutions are backdrop or absent.
+- **Low–mid (3–4):** an institution exerts real pressure, but the show is about specific people, not the machine — *Better Call Saul* 3 (the firm and the cartel are pressure sources on Jimmy's moral fall, not the subject); *Happy Valley* 4 (policing is the setting; a family's trauma is the subject).
+- **Mid (5–6):** the institution genuinely shares the stage as a subject in its own right — *Slow Horses* 6 (Slough House and MI5's pecking order are satirized as a system).
 - **High (8–10):** the institution's self-perpetuating logic is the point.
 - Anchors: *The Wire* 10 (the definitional case — each season another institution); *Andor* 9 (ISB, prison, Senate, cells all as functioning machines); *Breaking Bad* 1 (about one man, not a system).
 
