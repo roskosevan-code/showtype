@@ -87,6 +87,17 @@ def _recommend(conn, liked: list[str], n: int, genre: str | None, disliked: list
     }
 
 
+def _query(conn, constraints, limit: int = 60) -> dict:
+    axis_ids, _ = space.axis_index(conn)
+    gmulti = db.genres_multi(conn)
+    matches = space.query(conn, constraints)
+    items = [
+        {"title": t, "genres": gmulti.get(t, []), "values": _values(v, axis_ids)}
+        for t, v in matches
+    ]
+    return {"count": len(items), "matches": items[:limit]}
+
+
 class _Handler(BaseHTTPRequestHandler):
     db_path = db.DEFAULT_DB_PATH
 
@@ -126,6 +137,15 @@ class _Handler(BaseHTTPRequestHandler):
                 n = int(q.get("n", ["12"])[0])
                 genre = q.get("genre", [""])[0] or None
                 return self._json(_recommend(conn, liked, n, genre, disliked))
+            if u.path == "/api/query":
+                cons = []
+                for f in q.get("f", []):
+                    aid, lo, hi = (int(x) for x in f.split(","))
+                    if lo > 0:
+                        cons.append((aid, ">=", lo))
+                    if hi < 10:
+                        cons.append((aid, "<=", hi))
+                return self._json(_query(conn, cons))
             return self._json({"error": "not found"}, 404)
         except (KeyError, ValueError) as e:
             return self._json({"error": str(e)}, 400)
@@ -178,6 +198,11 @@ PAGE = """<!doctype html>
   .badge { background:#0f0d0b; border:1px solid var(--line); color:var(--mut); border-radius:5px; padding:1px 7px; font-size:11.5px; margin-left:8px; }
   select { background:#0f0d0b; border:1px solid var(--line); color:var(--ink); padding:8px 10px; border-radius:7px; }
   label.chk { color:var(--mut); font-size:13px; display:flex; align-items:center; gap:6px; margin:10px 0 0; cursor:pointer; }
+  .grid-full { grid-column:1 / -1; }
+  .frow { display:grid; grid-template-columns:130px 1fr 1fr 62px; align-items:center; gap:12px; margin:5px 0; }
+  .frow .lbl { color:var(--mut); font-size:13px; }
+  .frow input[type=range]{ width:100%; accent-color:var(--acc); }
+  .frd { text-align:right; color:var(--ink); font-variant-numeric:tabular-nums; font-size:12.5px; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
   .chip { background:#0f0d0b; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:3px 10px; font-size:12.5px; }
   .chip b { cursor:pointer; color:var(--mut); margin-left:6px; }
@@ -201,6 +226,12 @@ PAGE = """<!doctype html>
     <div id="dchips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
     <div id="recs"></div>
+  </section>
+  <section class="card grid-full">
+    <h2>Filter by axis profile</h2>
+    <div id="filters"></div>
+    <div class="row" style="margin-top:12px"><button id="applyFilter">Apply filter</button><button id="resetFilter" class="ghost">Reset</button></div>
+    <div id="filterResults"></div>
   </section>
 </div>
 <script>
@@ -240,6 +271,33 @@ function renderChips(){
   $('#chips').innerHTML=chipHtml(liked,'like')||'<span class="dist">No likes yet.</span>';
   $('#dchips').innerHTML=chipHtml(disliked,'dislike');
 }
+
+function buildFilters(){
+  $('#filters').innerHTML=AXES.map(a=>
+    `<div class="frow" data-axis="${a.id}"><span class="lbl">${a.name}</span>`+
+    `<input type="range" min="0" max="10" value="0" data-kind="min">`+
+    `<input type="range" min="0" max="10" value="10" data-kind="max">`+
+    `<span class="frd" id="frd-${a.id}">0&ndash;10</span></div>`).join('');
+}
+function syncPair(el){
+  const row=el.closest('.frow'); const mn=row.querySelector('[data-kind=min]'), mx=row.querySelector('[data-kind=max]');
+  if(+mn.value>+mx.value){ if(el.dataset.kind==='min') mx.value=mn.value; else mn.value=mx.value; }
+  $('#frd-'+row.dataset.axis).innerHTML=mn.value+'&ndash;'+mx.value;
+}
+function axisFilters(){
+  return [...document.querySelectorAll('.frow')].map(r=>({
+    id:+r.dataset.axis, min:+r.querySelector('[data-kind=min]').value, max:+r.querySelector('[data-kind=max]').value
+  }));
+}
+async function runQuery(){
+  const fs=axisFilters().filter(s=>s.min>0||s.max<10);
+  const d=await j('/api/query?'+fs.map(s=>`f=${s.id},${s.min},${s.max}`).join('&'));
+  const head=`${d.count} show${d.count===1?'':'s'} match`+(fs.length?'':' (no filter)');
+  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+
+    d.matches.map(m=>`<li><span><button class="lk" data-t="${encodeURIComponent(m.title)}">${m.title}</button>${gbadges(m.genres)}</span></li>`).join('')+'</ul>';
+  if(d.count>d.matches.length) html+=`<div class="dist">showing first ${d.matches.length}</div>`;
+  $('#filterResults').innerHTML=html;
+}
 async function recommend(){
   if(!liked.length){ $('#recs').innerHTML='<div class="dist">Add a few shows you like first.</div>'; return; }
   const g=$('#recGenre').value;
@@ -263,6 +321,9 @@ $('#addDislike').addEventListener('click',()=>{ const v=$('#dislikeInput').value
 $('#dislikeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addDislike').click(); });
 $('#recBtn').addEventListener('click',recommend);
 $('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0; renderChips(); $('#recs').innerHTML=''; });
+$('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
+$('#applyFilter').addEventListener('click',runQuery);
+$('#resetFilter').addEventListener('click',()=>{ document.querySelectorAll('.frow').forEach(r=>{ r.querySelector('[data-kind=min]').value=0; r.querySelector('[data-kind=max]').value=10; $('#frd-'+r.dataset.axis).innerHTML='0&ndash;10'; }); $('#filterResults').innerHTML=''; });
 
 (async()=>{
   const m=await j('/api/meta');
@@ -270,6 +331,7 @@ $('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0;
   $('#shows').innerHTML=m.shows.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('');
   $('#recGenre').innerHTML='<option value="">All genres</option>'+GENRES.map(g=>`<option value="${g}">${g}</option>`).join('');
   renderChips();
+  buildFilters();
 })();
 </script>
 </body></html>"""

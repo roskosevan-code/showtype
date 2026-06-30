@@ -55,8 +55,10 @@ the 5–8 of the sparse 30-show space.
   The Expanse + BSG but disliking Black Mirror shifts the recs toward bigger, grounded
   systems shows (Andor, ZeroZeroZero, Chernobyl).
 - `taste_index/web.py` + `taste-index serve`: a zero-dependency web UI (stdlib
-  `http.server`) — explore a show's axis profile and nearest neighbours, and recommend
-  from shows you like. JSON API at `/api/meta`, `/api/show`, `/api/similar`, `/api/recommend`.
+  `http.server`) — explore a show's axis profile and nearest neighbours, recommend from
+  shows you like (and away from shows you don't), and **filter by axis profile** with
+  min/max sliders per axis. JSON API at `/api/meta`, `/api/show`, `/api/similar`,
+  `/api/recommend`, `/api/query`.
 
 ## Done — genre tags
 
