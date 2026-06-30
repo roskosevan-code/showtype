@@ -34,6 +34,10 @@ const genresOf=t=>(SHOWS[t]?SHOWS[t].genres:[]);
 const showsWithGenre=g=>TITLES.filter(t=>genresOf(t).includes(g));
 const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.length);
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
+const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
+function rowItem(title,genres,tail){
+  return `<li><span><button class="lk" data-t="${encodeURIComponent(title)}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${tail||''}</span></li>`;
+}
 
 function bars(values){
   return '<div class="axes">'+AXES.map((a,i)=>{const v=values[i];
@@ -41,7 +45,7 @@ function bars(values){
 }
 function neighborList(items){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>`<li><span><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button>${gbadges(it.genres)}</span><span class="dist">${it.distance}</span></li>`).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`)).join('')+'</ul>';
 }
 function nearestTo(vec,n,exclude,allowed){
   return TITLES.filter(t=>!exclude.has(t)&&(!allowed||allowed.has(t)))
@@ -93,14 +97,23 @@ function runQuery(){
   const matches=TITLES.filter(t=>fs.every(s=>{const v=SHOWS[t].values[s.id-1]; return v>=s.min&&v<=s.max;}));
   const shown=matches.slice(0,60);
   const head=`${matches.length} show${matches.length===1?'':'s'} match`+(fs.length?'':' (no filter)');
-  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+shown.map(t=>`<li><span><button class="lk" data-t="${encodeURIComponent(t)}">${t}</button>${gbadges(genresOf(t))}</span></li>`).join('')+'</ul>';
+  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+shown.map(t=>rowItem(t,genresOf(t),'')).join('')+'</ul>';
   if(matches.length>shown.length) html+=`<div class="dist">showing first ${shown.length}</div>`;
   $('#filterResults').innerHTML=html;
 }
 
+function addPref(title,kind){
+  const arr=kind==='dislike'?disliked:liked, other=kind==='dislike'?liked:disliked;
+  const oi=other.indexOf(title); if(oi>=0) other.splice(oi,1);
+  if(!arr.includes(title)) arr.push(title);
+  renderChips();
+  if($('#pick').value) loadShow($('#pick').value);
+  if(liked.length) recommend();
+}
 document.addEventListener('click',e=>{
-  const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); }
-  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); }
+  const a=e.target.closest('.act'); if(a){ addPref(decodeURIComponent(a.dataset.t),a.dataset.act); return; }
+  const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
+  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); if(liked.length&&$('#recs').innerHTML) recommend(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });

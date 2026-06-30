@@ -206,6 +206,10 @@ PAGE = """<!doctype html>
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
   .chip { background:#0f0d0b; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:3px 10px; font-size:12.5px; }
   .chip b { cursor:pointer; color:var(--mut); margin-left:6px; }
+  .racts { display:flex; align-items:center; gap:6px; }
+  .act { background:transparent; border:1px solid var(--line); color:var(--mut); width:22px; height:22px; border-radius:6px; cursor:pointer; padding:0; font-size:15px; line-height:1; }
+  .act:hover { color:var(--ink); border-color:var(--acc); }
+  .act.lk-on { color:var(--acc); border-color:var(--acc); }
   .err { color:#e0795b; font-size:13px; }
 </style></head>
 <body>
@@ -247,11 +251,13 @@ function bars(values){
   }).join('')+'</div>';
 }
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
+const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
+function rowItem(title,genres,tail){
+  return `<li><span><button class="lk" data-t="${encodeURIComponent(title)}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${tail||''}</span></li>`;
+}
 function neighborList(items){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>
-    `<li><span><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button>${gbadges(it.genres)}</span><span class="dist">${it.distance}</span></li>`
-  ).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`)).join('')+'</ul>';
 }
 
 async function loadShow(title){
@@ -294,7 +300,7 @@ async function runQuery(){
   const d=await j('/api/query?'+fs.map(s=>`f=${s.id},${s.min},${s.max}`).join('&'));
   const head=`${d.count} show${d.count===1?'':'s'} match`+(fs.length?'':' (no filter)');
   let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+
-    d.matches.map(m=>`<li><span><button class="lk" data-t="${encodeURIComponent(m.title)}">${m.title}</button>${gbadges(m.genres)}</span></li>`).join('')+'</ul>';
+    d.matches.map(m=>rowItem(m.title,m.genres,'')).join('')+'</ul>';
   if(d.count>d.matches.length) html+=`<div class="dist">showing first ${d.matches.length}</div>`;
   $('#filterResults').innerHTML=html;
 }
@@ -309,9 +315,18 @@ async function recommend(){
   $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations);
 }
 
+function addPref(title,kind){
+  const arr=kind==='dislike'?disliked:liked, other=kind==='dislike'?liked:disliked;
+  const oi=other.indexOf(title); if(oi>=0) other.splice(oi,1);
+  if(!arr.includes(title)) arr.push(title);
+  renderChips();
+  if($('#pick').value) loadShow($('#pick').value);
+  if(liked.length) recommend();
+}
 document.addEventListener('click',e=>{
-  const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); }
-  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); }
+  const a=e.target.closest('.act'); if(a){ addPref(decodeURIComponent(a.dataset.t),a.dataset.act); return; }
+  const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
+  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); if(liked.length&&$('#recs').innerHTML) recommend(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
