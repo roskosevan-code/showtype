@@ -57,12 +57,14 @@ the 5–8 of the sparse 30-show space.
 ## Done — genre tags
 
 The axes are *structural*, so taste-space encodes structure, not genre/humour — a comedy
-and a drama with the same fingerprint sit together. `docs/genres.csv` adds one primary
-genre per show (categorical metadata, a `genre` column on `show`, loaded with
-`tag-genres`), and `similar` / `recommend` take an optional genre filter. Liking
-Fleabag + Atlanta + Barry recommends prestige dramas unfiltered, but Russian Doll /
-BoJack / PEN15 / Master of None when constrained to Comedy. The web UI exposes this as
-"same genre only" (explore) and a genre dropdown (recommend).
+and a drama with the same fingerprint sit together. `docs/genres.csv` (`show,genre,rank`)
+adds genres as categorical metadata: a `show_genre` junction table (rank 0 = primary,
+denormalized to `show.genre`) holds **one or more genres per show** — Barry is Comedy *and*
+Crime, so it appears under both filters. Loaded with `tag-genres`; `similar` / `recommend`
+take an optional genre filter (membership, any rank). Liking Fleabag + Atlanta + Barry
+recommends prestige dramas unfiltered, but Russian Doll / BoJack / PEN15 / Master of None
+when constrained to Comedy. The web UI exposes "same genre only" (explore, unions the
+target's genres) and a genre dropdown (recommend).
 
 ## Deferred
 

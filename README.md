@@ -76,11 +76,13 @@ The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis pr
 nearest neighbours and recommends from a taste profile (the centroid of shows you like —
 e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon).
 
-**Genre tags** (`docs/genres.csv`, one primary genre per show) are categorical metadata —
-the axes are *structural*, so they don't encode genre/humour. Genre filtering closes that
-gap: liking Fleabag + Atlanta + Barry recommends prestige dramas across all genres but
-Russian Doll / BoJack / PEN15 when constrained to Comedy. The UI exposes "same genre only"
-(explore) and a genre dropdown (recommend).
+**Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is
+primary) are categorical metadata — the axes are *structural*, so they don't encode
+genre/humour. Genre filtering closes that gap: liking Fleabag + Atlanta + Barry recommends
+prestige dramas across all genres but Russian Doll / BoJack / PEN15 when constrained to
+Comedy. Multi-genre means a show appears under each of its genres — Barry (Comedy + Crime)
+shows up in both filters. The UI exposes "same genre only" (explore) and a genre dropdown
+(recommend).
 
 **Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
 for provenance). `docs/baseline-scores.csv` is the **active diff reference** — the gold
@@ -108,7 +110,7 @@ docs/
   phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
   catalog-scores.csv            # (generated) 231-show catalog for retrieval; load with `backfill --csv`
-  genres.csv                    # (curated) one primary genre per show; load with `tag-genres`
+  genres.csv                    # (curated) show,genre,rank — primary + secondary genres; load with `tag-genres`
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)

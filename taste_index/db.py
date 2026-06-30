@@ -73,31 +73,69 @@ def save_scores(
         )
 
 
-def tag_genres(conn: sqlite3.Connection, mapping: dict[str, str]) -> int:
-    """Set show.genre for matching titles. Returns the number of rows updated."""
-    updated = 0
+def tag_genres(conn: sqlite3.Connection, rows: list[tuple[str, str, int]]) -> int:
+    """Load (title, genre, rank) genre memberships.
+
+    Replaces all genres for the tagged shows; rank 0 is mirrored into show.genre
+    as the primary. Returns the number of membership rows inserted.
+    """
+    ids = {r["title"]: int(r["id"]) for r in conn.execute("SELECT id, title FROM show")}
+    present = [(t, g, rank) for t, g, rank in rows if t in ids]
+    tagged_ids = {ids[t] for t, _, _ in present}
+    inserted = 0
     with conn:
-        for title, genre in mapping.items():
-            cur = conn.execute(
-                "UPDATE show SET genre = ? WHERE title = ?", (genre, title)
+        for sid in tagged_ids:
+            conn.execute("DELETE FROM show_genre WHERE show_id = ?", (sid,))
+            conn.execute("UPDATE show SET genre = NULL WHERE id = ?", (sid,))
+        for title, genre, rank in present:
+            conn.execute(
+                "INSERT INTO show_genre (show_id, genre, rank) VALUES (?, ?, ?)",
+                (ids[title], genre, rank),
             )
-            updated += cur.rowcount
-    return updated
+            inserted += 1
+            if rank == 0:
+                conn.execute(
+                    "UPDATE show SET genre = ? WHERE id = ?", (genre, ids[title])
+                )
+    return inserted
 
 
 def genre_map(conn: sqlite3.Connection) -> dict[str, str]:
+    """title -> primary genre."""
     return {
         r["title"]: r["genre"]
         for r in conn.execute("SELECT title, genre FROM show WHERE genre IS NOT NULL")
     }
 
 
+def genres_multi(conn: sqlite3.Connection) -> dict[str, list[str]]:
+    """title -> all genres, primary first."""
+    out: dict[str, list[str]] = {}
+    for r in conn.execute(
+        "SELECT sh.title AS title, sg.genre AS genre FROM show_genre sg "
+        "JOIN show sh ON sh.id = sg.show_id ORDER BY sg.rank"
+    ):
+        out.setdefault(r["title"], []).append(r["genre"])
+    return out
+
+
+def shows_with_genre(conn: sqlite3.Connection, genre: str) -> set[str]:
+    return {
+        r["title"]
+        for r in conn.execute(
+            "SELECT sh.title AS title FROM show_genre sg "
+            "JOIN show sh ON sh.id = sg.show_id WHERE sg.genre = ?",
+            (genre,),
+        )
+    }
+
+
 def get_genres(conn: sqlite3.Connection) -> list[str]:
+    """All genres that appear as any tag, ordered by frequency."""
     return [
         r["genre"]
         for r in conn.execute(
-            "SELECT genre, COUNT(*) n FROM show WHERE genre IS NOT NULL "
-            "GROUP BY genre ORDER BY n DESC, genre"
+            "SELECT genre, COUNT(*) n FROM show_genre GROUP BY genre ORDER BY n DESC, genre"
         )
     ]
 

@@ -24,12 +24,7 @@ def _meta(conn) -> dict:
         for r, code in zip(db.get_axes(conn), space.AXIS_CODES)
     ]
     titles = sorted(t for t in space.show_vectors(conn))
-    return {
-        "axes": axes,
-        "shows": titles,
-        "genres": db.get_genres(conn),
-        "genre_map": db.genre_map(conn),
-    }
+    return {"axes": axes, "shows": titles, "genres": db.get_genres(conn)}
 
 
 def _show(conn, title: str) -> dict:
@@ -46,45 +41,46 @@ def _show(conn, title: str) -> dict:
         }
         for r, code in zip(rows, space.AXIS_CODES)
     ]
-    return {"title": title, "genre": db.genre_map(conn).get(title), "scores": scores}
+    return {"title": title, "genres": db.genres_multi(conn).get(title, []), "scores": scores}
 
 
-def _neighbor_list(items, axis_ids, gmap):
+def _neighbor_list(items, axis_ids, gmulti):
     return [
-        {"title": t, "distance": round(d, 2), "genre": gmap.get(t), "values": _values(v, axis_ids)}
+        {"title": t, "distance": round(d, 2), "genres": gmulti.get(t, []),
+         "values": _values(v, axis_ids)}
         for t, d, v in items
     ]
 
 
-def _allowed_for(conn, genre: str | None) -> set[str] | None:
-    if not genre:
-        return None
-    return {t for t, g in db.genre_map(conn).items() if g == genre}
-
-
-def _similar(conn, title: str, n: int, genre: str | None) -> dict:
+def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> dict:
     axis_ids, _ = space.axis_index(conn)
-    gmap = db.genre_map(conn)
-    neighbors = space.nearest(conn, title, n=n, allowed=_allowed_for(conn, genre))
+    gmulti = db.genres_multi(conn)
+    allowed: set[str] | None = None
+    if genre:
+        allowed = db.shows_with_genre(conn, genre)
+    elif same_genre:
+        allowed = set().union(
+            *(db.shows_with_genre(conn, g) for g in gmulti.get(title, [])) or [set()]
+        )
+    neighbors = space.nearest(conn, title, n=n, allowed=allowed)
     target = space.show_vectors(conn)[title]
     return {
         "title": title,
-        "genre": gmap.get(title),
+        "genres": gmulti.get(title, []),
         "values": _values(target, axis_ids),
-        "neighbors": _neighbor_list(neighbors, axis_ids, gmap),
+        "neighbors": _neighbor_list(neighbors, axis_ids, gmulti),
     }
 
 
 def _recommend(conn, liked: list[str], n: int, genre: str | None) -> dict:
     axis_ids, _ = space.axis_index(conn)
-    gmap = db.genre_map(conn)
-    present, centroid, recs = space.recommend(
-        conn, liked, n=n, allowed=_allowed_for(conn, genre)
-    )
+    gmulti = db.genres_multi(conn)
+    allowed = db.shows_with_genre(conn, genre) if genre else None
+    present, centroid, recs = space.recommend(conn, liked, n=n, allowed=allowed)
     return {
         "liked": present,
         "centroid": [round(centroid[i], 1) for i in axis_ids],
-        "recommendations": _neighbor_list(recs, axis_ids, gmap),
+        "recommendations": _neighbor_list(recs, axis_ids, gmulti),
     }
 
 
@@ -119,7 +115,8 @@ class _Handler(BaseHTTPRequestHandler):
             if u.path == "/api/similar":
                 n = int(q.get("n", ["8"])[0])
                 genre = q.get("genre", [""])[0] or None
-                return self._json(_similar(conn, q.get("title", [""])[0], n, genre))
+                same = q.get("same_genre", ["0"])[0] == "1"
+                return self._json(_similar(conn, q.get("title", [""])[0], n, genre, same))
             if u.path == "/api/recommend":
                 liked = [s for s in q.get("like", [""])[0].split("|") if s]
                 n = int(q.get("n", ["12"])[0])
@@ -212,10 +209,11 @@ function bars(values){
     return `<div class="ax"><span class="lbl">${a.name}</span><span class="bar"><span style="width:${v*10}%"></span></span><span class="v">${v}</span></div>`;
   }).join('')+'</div>';
 }
+const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 function neighborList(items){
   if(!items.length) return '<div class="dist">No matches.</div>';
   return '<ul class="list">'+items.map(it=>
-    `<li><span><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button>${it.genre?`<span class="badge">${it.genre}</span>`:''}</span><span class="dist">${it.distance}</span></li>`
+    `<li><span><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button>${gbadges(it.genres)}</span><span class="dist">${it.distance}</span></li>`
   ).join('')+'</ul>';
 }
 
@@ -223,9 +221,9 @@ async function loadShow(title){
   $('#pick').value=title;
   const d=await j('/api/show?title='+encodeURIComponent(title));
   if(d.error){ $('#profile').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  const sameG=($('#simSameGenre').checked && d.genre)?'&genre='+encodeURIComponent(d.genre):'';
+  const sameG=$('#simSameGenre').checked?'&same_genre=1':'';
   const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
-  let html=`<div style="margin:8px 0 2px">${d.genre?`<span class="badge">${d.genre}</span>`:''}</div>`+bars(d.scores.map(s=>s.value));
+  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}</div>`+bars(d.scores.map(s=>s.value));
   html+=d.scores.map(s=>`<div class="just"><b>${s.axis} ${s.value}</b> &middot; ${s.justification} <i>(${s.confidence})</i></div>`).join('');
   html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(sim.neighbors);
   $('#profile').innerHTML=html;

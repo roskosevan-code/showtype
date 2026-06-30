@@ -18,8 +18,16 @@ CREATE TABLE IF NOT EXISTS axis (
 CREATE TABLE IF NOT EXISTS show (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     title      TEXT NOT NULL UNIQUE,
-    genre      TEXT,                          -- primary genre tag (see docs/genres.csv)
+    genre      TEXT,                          -- primary genre (rank 0), denormalized for display
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- A show may carry several genres; rank 0 is the primary. See docs/genres.csv.
+CREATE TABLE IF NOT EXISTS show_genre (
+    show_id INTEGER NOT NULL REFERENCES show(id) ON DELETE CASCADE,
+    genre   TEXT    NOT NULL,
+    rank    INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (show_id, genre)
 );
 
 -- One axis score for one show. (show_id, axis_id) is unique: re-scoring a show

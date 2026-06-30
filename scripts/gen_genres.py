@@ -94,35 +94,94 @@ GENRES: dict[str, list[str]] = {
 }
 
 
+# Additional genres beyond the primary, for genuinely cross-genre shows. The
+# primary (from GENRES above) stays rank 0; these are rank 1+. Kept deliberately
+# sparse and cross-tonal (we don't append "Drama" to everything, which would make
+# the Drama filter meaningless).
+SECONDARY: dict[str, list[str]] = {
+    # comedy <-> other (dark comedies / dramedies that genuinely play funny)
+    "Barry": ["Crime"], "Fargo": ["Comedy"], "Killing Eve": ["Comedy"],
+    "Slow Horses": ["Comedy"], "Patriot": ["Comedy"], "Beef": ["Comedy"],
+    "The Bear": ["Comedy"], "Orange Is the New Black": ["Comedy"],
+    "Search Party": ["Mystery"], "Maniac": ["Comedy"], "Veronica Mars": ["Crime"],
+    "Russian Doll": ["Sci-Fi"], "What We Do in the Shadows": ["Fantasy"],
+    "The Good Place": ["Fantasy"], "Wednesday": ["Mystery"], "The Boys": ["Comedy"],
+    # horror <-> other
+    "Hannibal": ["Crime"], "Stranger Things": ["Horror"], "The Last of Us": ["Horror"],
+    "Buffy the Vampire Slayer": ["Horror"], "Angel": ["Horror"],
+    "Penny Dreadful": ["Fantasy"], "The Terror": ["Historical"], "Kingdom": ["Historical"],
+    "Lovecraft Country": ["Sci-Fi"], "Twin Peaks": ["Horror"],
+    "The Returned (Les Revenants)": ["Mystery"],
+    # western / historical period crossovers
+    "Justified": ["Western"], "The Mandalorian": ["Western"], "Westworld": ["Western"],
+    "Deadwood": ["Historical"], "Peaky Blinders": ["Historical"],
+    "Boardwalk Empire": ["Historical"], "Babylon Berlin": ["Historical"],
+    "Vikings": ["War"], "Rome": ["War"],
+    # mystery <-> crime / thriller
+    "True Detective": ["Mystery"], "Broadchurch": ["Crime"], "Mare of Easttown": ["Crime"],
+    "Sharp Objects": ["Thriller"], "The Sinner": ["Crime"], "Sherlock": ["Crime"],
+    "Top of the Lake": ["Crime"], "Severance": ["Mystery"], "Silo": ["Mystery"],
+    "Fringe": ["Mystery"], "The X-Files": ["Mystery"], "Lost": ["Mystery"],
+    "The OA": ["Mystery"], "The Leftovers": ["Mystery"], "Lupin": ["Mystery"],
+    # sci-fi <-> thriller / crime
+    "Person of Interest": ["Crime"], "Counterpart": ["Thriller"],
+    "Snowpiercer": ["Thriller"], "Black Mirror": ["Thriller"], "Mr. Robot": ["Sci-Fi"],
+    "Years and Years": ["Sci-Fi"],
+    # crime <-> thriller
+    "Breaking Bad": ["Thriller"], "Ozark": ["Thriller"], "Money Heist": ["Thriller"],
+    "ZeroZeroZero": ["Thriller"], "Bloodline": ["Thriller"], "Bodyguard": ["Crime"],
+    "Your Honor": ["Thriller"], "Banshee": ["Thriller"],
+}
+
+
 def main() -> int:
     catalog = {r["show"] for r in csv.DictReader(open(CATALOG, encoding="utf-8"))}
-    mapping: dict[str, str] = {}
+    primary: dict[str, str] = {}
     dupes = []
     for genre, shows in GENRES.items():
         for s in shows:
-            if s in mapping:
+            if s in primary:
                 dupes.append(s)
-            mapping[s] = genre
+            primary[s] = genre
 
-    missing = sorted(catalog - mapping.keys())   # catalog shows with no genre
-    unknown = sorted(mapping.keys() - catalog)    # genres for non-catalog titles
-    if dupes or missing or unknown:
-        if dupes:
-            print("DUPLICATE assignments:", dupes, file=sys.stderr)
-        if missing:
-            print(f"MISSING genre for {len(missing)}:", missing, file=sys.stderr)
-        if unknown:
-            print(f"UNKNOWN titles (not in catalog) {len(unknown)}:", unknown, file=sys.stderr)
+    vocab = set(GENRES)
+    errors = []
+    for s, extras in SECONDARY.items():
+        if s not in catalog:
+            errors.append(f"SECONDARY for non-catalog title: {s}")
+        for g in extras:
+            if g not in vocab:
+                errors.append(f"{s}: unknown genre {g!r}")
+            if g == primary.get(s):
+                errors.append(f"{s}: secondary {g!r} duplicates primary")
+
+    missing = sorted(catalog - primary.keys())
+    unknown = sorted(primary.keys() - catalog)
+    if dupes or missing or unknown or errors:
+        for label, items in [("DUPLICATE", dupes), ("MISSING", missing),
+                             ("UNKNOWN", unknown), ("ERRORS", errors)]:
+            if items:
+                print(f"{label}: {items}", file=sys.stderr)
         return 1
+
+    # Build (show, genre, rank) rows: primary rank 0, then secondaries.
+    rows: list[tuple[str, str, int]] = []
+    for s in sorted(catalog):
+        rows.append((s, primary[s], 0))
+        for i, g in enumerate(SECONDARY.get(s, []), start=1):
+            rows.append((s, g, i))
 
     with open(OUT, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["show", "genre"])
-        for s in sorted(mapping):
-            w.writerow([s, mapping[s]])
-    counts = {g: len(v) for g, v in sorted(GENRES.items(), key=lambda kv: -len(kv[1]))}
-    print(f"wrote {OUT.relative_to(REPO)}: {len(mapping)} shows")
-    print("by genre:", counts)
+        w.writerow(["show", "genre", "rank"])
+        w.writerows(rows)
+
+    from collections import Counter
+    counts = Counter(g for _, g, _ in rows)
+    multi = sum(1 for s in catalog if SECONDARY.get(s))
+    print(f"wrote {OUT.relative_to(REPO)}: {len(catalog)} shows, {len(rows)} tags "
+          f"({multi} multi-genre)")
+    print("by genre:", dict(counts.most_common()))
     return 0
 
 

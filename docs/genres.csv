@@ -1,232 +1,297 @@
-show,genre
-1899,Sci-Fi
-3 Body Problem,Sci-Fi
-30 Rock,Comedy
-Abbott Elementary,Comedy
-Alias,Thriller
-Altered Carbon,Sci-Fi
-American Gods,Fantasy
-Andor,Sci-Fi
-Angel,Fantasy
-Animal Kingdom,Crime
-Arrested Development,Comedy
-Atlanta,Comedy
-Babylon Berlin,Crime
-Band of Brothers,War
-Banshee,Crime
-Barry,Comedy
-Battlestar Galactica,Sci-Fi
-Beef,Drama
-Berlin Station,Thriller
-Better Call Saul,Crime
-Better Things,Comedy
-Big Little Lies,Drama
-Billions,Drama
-Black Mirror,Sci-Fi
-Black Sails,Historical
-Bloodline,Crime
-Blue Lights,Crime
-BoJack Horseman,Comedy
-Boardwalk Empire,Crime
-Bodyguard,Thriller
-Borgen,Political
-Bosch,Crime
-Breaking Bad,Crime
-Broadchurch,Mystery
-Brooklyn Nine-Nine,Comedy
-Buffy the Vampire Slayer,Fantasy
-Call My Agent,Comedy
-Cheers,Comedy
-Chernobyl,Drama
-Collateral,Crime
-Community,Comedy
-Counterpart,Sci-Fi
-Crash Landing on You,Drama
-Curb Your Enthusiasm,Comedy
-Damages,Thriller
-Dark,Sci-Fi
-Deadwood,Western
-Deutschland 83,Thriller
-Devs,Sci-Fi
-Dexter,Crime
-Doctor Who,Sci-Fi
-ER,Drama
-Eastbound & Down,Comedy
-Fallout,Sci-Fi
-Fargo,Crime
-Farscape,Sci-Fi
-Fauda,Thriller
-Firefly,Sci-Fi
-Fleabag,Comedy
-Forbrydelsen (The Killing),Crime
-Foundation,Sci-Fi
-Frasier,Comedy
-Friday Night Lights,Drama
-Fringe,Sci-Fi
-Game of Thrones,Fantasy
-Generation Kill,War
-Gilmore Girls,Comedy
-Giri/Haji,Crime
-Girls,Comedy
-Gomorrah,Crime
-Hacks,Comedy
-Halt and Catch Fire,Drama
-Hannibal,Horror
-Happy Valley,Crime
-Hellbound,Horror
-Hill Street Blues,Crime
-His Dark Materials,Fantasy
-Homeland,Thriller
-Homicide: Life on the Street,Crime
-House,Drama
-House of Cards,Political
-House of the Dragon,Fantasy
-Industry,Drama
-It's Always Sunny in Philadelphia,Comedy
-Justified,Crime
-Killing Eve,Thriller
-Kingdom,Horror
-Line of Duty,Crime
-Loki,Sci-Fi
-Lost,Sci-Fi
-Lost in Space,Sci-Fi
-Lovecraft Country,Horror
-Lupin,Crime
-Luther,Crime
-Mad Men,Drama
-Maniac,Sci-Fi
-Marcella,Crime
-Mare of Easttown,Mystery
-Master of None,Comedy
-Midnight Mass,Horror
-Mindhunter,Crime
-Money Heist,Crime
-Mr. Robot,Thriller
-My Brilliant Friend,Drama
-NYPD Blue,Crime
-Narcos,Crime
-Narcos: Mexico,Crime
-Normal People,Drama
-Olive Kitteridge,Drama
-Orange Is the New Black,Drama
-Outlander,Fantasy
-Oz,Crime
-Ozark,Crime
-PEN15,Comedy
-Pachinko,Historical
-Parks and Recreation,Comedy
-Patrick Melrose,Drama
-Patriot,Thriller
-Peaky Blinders,Crime
-Penny Dreadful,Horror
-Perry Mason,Crime
-Person of Interest,Sci-Fi
-Power,Crime
-Raised by Wolves,Sci-Fi
-Ray Donovan,Crime
-Reacher,Crime
-Rectify,Drama
-Reply 1988,Drama
-Reservation Dogs,Comedy
-Rome,Historical
-Russian Doll,Comedy
-Schitt's Creek,Comedy
-Search Party,Comedy
-Seinfeld,Comedy
-Sense8,Sci-Fi
-Severance,Sci-Fi
-Sex Education,Comedy
-Sharp Objects,Mystery
-Sherlock,Mystery
-Shogun,Historical
-Show Me a Hero,Drama
-Silicon Valley,Comedy
-Silo,Sci-Fi
-Six Feet Under,Drama
-Slow Horses,Thriller
-Sneaky Pete,Crime
-Snowfall,Crime
-Snowpiercer,Sci-Fi
-Sons of Anarchy,Crime
-Spiral (Engrenages),Crime
-Squid Game,Thriller
-St. Elsewhere,Drama
-Star Trek: Deep Space Nine,Sci-Fi
-Star Trek: The Next Generation,Sci-Fi
-Stargate SG-1,Sci-Fi
-Station Eleven,Sci-Fi
-Stranger Things,Sci-Fi
-Suburra,Crime
-Succession,Drama
-Tales from the Loop,Sci-Fi
-Ted Lasso,Comedy
-Tehran,Thriller
-The Agency,Thriller
-The Americans,Thriller
-The Bear,Drama
-The Boys,Sci-Fi
-The Bridge (Bron/Broen),Crime
-The Crown,Drama
-The Deuce,Drama
-The End of the Fxxking World,Comedy
-The Expanse,Sci-Fi
-The Fall,Crime
-The Glory,Thriller
-The Good Fight,Drama
-The Good Place,Comedy
-The Good Wife,Drama
-The Handmaid's Tale,Sci-Fi
-The Haunting of Hill House,Horror
-The Killing,Crime
-The Knick,Drama
-The Larry Sanders Show,Comedy
-The Last of Us,Sci-Fi
-The Leftovers,Drama
-The Mandalorian,Sci-Fi
-The Marvelous Mrs. Maisel,Comedy
-The Newsroom,Drama
-The Night Manager,Thriller
-The Night Of,Crime
-The OA,Sci-Fi
-The Office,Comedy
-The Office (UK),Comedy
-The Plot Against America,Historical
-The Responder,Crime
-The Returned (Les Revenants),Horror
-The Shield,Crime
-The Sinner,Mystery
-The Sopranos,Crime
-The Terror,Horror
-The Tunnel,Crime
-The Twilight Zone,Sci-Fi
-The Umbrella Academy,Sci-Fi
-The West Wing,Political
-The Wheel of Time,Fantasy
-The Wire,Crime
-The Witcher,Fantasy
-The X-Files,Sci-Fi
-The Young Pope,Drama
-This Is Us,Drama
-Tokyo Vice,Crime
-Tom Clancy's Jack Ryan,Thriller
-Top Boy,Crime
-Top of the Lake,Mystery
-Treme,Drama
-True Detective,Crime
-Twin Peaks,Mystery
-Unforgotten,Crime
-Veep,Comedy
-Veronica Mars,Mystery
-Vikings,Historical
-Vinyl,Drama
-Wallander,Crime
-WandaVision,Sci-Fi
-Watchmen,Sci-Fi
-We Own This City,Crime
-Wednesday,Fantasy
-Westworld,Sci-Fi
-What We Do in the Shadows,Comedy
-Years and Years,Drama
-Yellowstone,Western
-Your Honor,Crime
-ZeroZeroZero,Crime
+show,genre,rank
+1899,Sci-Fi,0
+3 Body Problem,Sci-Fi,0
+30 Rock,Comedy,0
+Abbott Elementary,Comedy,0
+Alias,Thriller,0
+Altered Carbon,Sci-Fi,0
+American Gods,Fantasy,0
+Andor,Sci-Fi,0
+Angel,Fantasy,0
+Angel,Horror,1
+Animal Kingdom,Crime,0
+Arrested Development,Comedy,0
+Atlanta,Comedy,0
+Babylon Berlin,Crime,0
+Babylon Berlin,Historical,1
+Band of Brothers,War,0
+Banshee,Crime,0
+Banshee,Thriller,1
+Barry,Comedy,0
+Barry,Crime,1
+Battlestar Galactica,Sci-Fi,0
+Beef,Drama,0
+Beef,Comedy,1
+Berlin Station,Thriller,0
+Better Call Saul,Crime,0
+Better Things,Comedy,0
+Big Little Lies,Drama,0
+Billions,Drama,0
+Black Mirror,Sci-Fi,0
+Black Mirror,Thriller,1
+Black Sails,Historical,0
+Bloodline,Crime,0
+Bloodline,Thriller,1
+Blue Lights,Crime,0
+BoJack Horseman,Comedy,0
+Boardwalk Empire,Crime,0
+Boardwalk Empire,Historical,1
+Bodyguard,Thriller,0
+Bodyguard,Crime,1
+Borgen,Political,0
+Bosch,Crime,0
+Breaking Bad,Crime,0
+Breaking Bad,Thriller,1
+Broadchurch,Mystery,0
+Broadchurch,Crime,1
+Brooklyn Nine-Nine,Comedy,0
+Buffy the Vampire Slayer,Fantasy,0
+Buffy the Vampire Slayer,Horror,1
+Call My Agent,Comedy,0
+Cheers,Comedy,0
+Chernobyl,Drama,0
+Collateral,Crime,0
+Community,Comedy,0
+Counterpart,Sci-Fi,0
+Counterpart,Thriller,1
+Crash Landing on You,Drama,0
+Curb Your Enthusiasm,Comedy,0
+Damages,Thriller,0
+Dark,Sci-Fi,0
+Deadwood,Western,0
+Deadwood,Historical,1
+Deutschland 83,Thriller,0
+Devs,Sci-Fi,0
+Dexter,Crime,0
+Doctor Who,Sci-Fi,0
+ER,Drama,0
+Eastbound & Down,Comedy,0
+Fallout,Sci-Fi,0
+Fargo,Crime,0
+Fargo,Comedy,1
+Farscape,Sci-Fi,0
+Fauda,Thriller,0
+Firefly,Sci-Fi,0
+Fleabag,Comedy,0
+Forbrydelsen (The Killing),Crime,0
+Foundation,Sci-Fi,0
+Frasier,Comedy,0
+Friday Night Lights,Drama,0
+Fringe,Sci-Fi,0
+Fringe,Mystery,1
+Game of Thrones,Fantasy,0
+Generation Kill,War,0
+Gilmore Girls,Comedy,0
+Giri/Haji,Crime,0
+Girls,Comedy,0
+Gomorrah,Crime,0
+Hacks,Comedy,0
+Halt and Catch Fire,Drama,0
+Hannibal,Horror,0
+Hannibal,Crime,1
+Happy Valley,Crime,0
+Hellbound,Horror,0
+Hill Street Blues,Crime,0
+His Dark Materials,Fantasy,0
+Homeland,Thriller,0
+Homicide: Life on the Street,Crime,0
+House,Drama,0
+House of Cards,Political,0
+House of the Dragon,Fantasy,0
+Industry,Drama,0
+It's Always Sunny in Philadelphia,Comedy,0
+Justified,Crime,0
+Justified,Western,1
+Killing Eve,Thriller,0
+Killing Eve,Comedy,1
+Kingdom,Horror,0
+Kingdom,Historical,1
+Line of Duty,Crime,0
+Loki,Sci-Fi,0
+Lost,Sci-Fi,0
+Lost,Mystery,1
+Lost in Space,Sci-Fi,0
+Lovecraft Country,Horror,0
+Lovecraft Country,Sci-Fi,1
+Lupin,Crime,0
+Lupin,Mystery,1
+Luther,Crime,0
+Mad Men,Drama,0
+Maniac,Sci-Fi,0
+Maniac,Comedy,1
+Marcella,Crime,0
+Mare of Easttown,Mystery,0
+Mare of Easttown,Crime,1
+Master of None,Comedy,0
+Midnight Mass,Horror,0
+Mindhunter,Crime,0
+Money Heist,Crime,0
+Money Heist,Thriller,1
+Mr. Robot,Thriller,0
+Mr. Robot,Sci-Fi,1
+My Brilliant Friend,Drama,0
+NYPD Blue,Crime,0
+Narcos,Crime,0
+Narcos: Mexico,Crime,0
+Normal People,Drama,0
+Olive Kitteridge,Drama,0
+Orange Is the New Black,Drama,0
+Orange Is the New Black,Comedy,1
+Outlander,Fantasy,0
+Oz,Crime,0
+Ozark,Crime,0
+Ozark,Thriller,1
+PEN15,Comedy,0
+Pachinko,Historical,0
+Parks and Recreation,Comedy,0
+Patrick Melrose,Drama,0
+Patriot,Thriller,0
+Patriot,Comedy,1
+Peaky Blinders,Crime,0
+Peaky Blinders,Historical,1
+Penny Dreadful,Horror,0
+Penny Dreadful,Fantasy,1
+Perry Mason,Crime,0
+Person of Interest,Sci-Fi,0
+Person of Interest,Crime,1
+Power,Crime,0
+Raised by Wolves,Sci-Fi,0
+Ray Donovan,Crime,0
+Reacher,Crime,0
+Rectify,Drama,0
+Reply 1988,Drama,0
+Reservation Dogs,Comedy,0
+Rome,Historical,0
+Rome,War,1
+Russian Doll,Comedy,0
+Russian Doll,Sci-Fi,1
+Schitt's Creek,Comedy,0
+Search Party,Comedy,0
+Search Party,Mystery,1
+Seinfeld,Comedy,0
+Sense8,Sci-Fi,0
+Severance,Sci-Fi,0
+Severance,Mystery,1
+Sex Education,Comedy,0
+Sharp Objects,Mystery,0
+Sharp Objects,Thriller,1
+Sherlock,Mystery,0
+Sherlock,Crime,1
+Shogun,Historical,0
+Show Me a Hero,Drama,0
+Silicon Valley,Comedy,0
+Silo,Sci-Fi,0
+Silo,Mystery,1
+Six Feet Under,Drama,0
+Slow Horses,Thriller,0
+Slow Horses,Comedy,1
+Sneaky Pete,Crime,0
+Snowfall,Crime,0
+Snowpiercer,Sci-Fi,0
+Snowpiercer,Thriller,1
+Sons of Anarchy,Crime,0
+Spiral (Engrenages),Crime,0
+Squid Game,Thriller,0
+St. Elsewhere,Drama,0
+Star Trek: Deep Space Nine,Sci-Fi,0
+Star Trek: The Next Generation,Sci-Fi,0
+Stargate SG-1,Sci-Fi,0
+Station Eleven,Sci-Fi,0
+Stranger Things,Sci-Fi,0
+Stranger Things,Horror,1
+Suburra,Crime,0
+Succession,Drama,0
+Tales from the Loop,Sci-Fi,0
+Ted Lasso,Comedy,0
+Tehran,Thriller,0
+The Agency,Thriller,0
+The Americans,Thriller,0
+The Bear,Drama,0
+The Bear,Comedy,1
+The Boys,Sci-Fi,0
+The Boys,Comedy,1
+The Bridge (Bron/Broen),Crime,0
+The Crown,Drama,0
+The Deuce,Drama,0
+The End of the Fxxking World,Comedy,0
+The Expanse,Sci-Fi,0
+The Fall,Crime,0
+The Glory,Thriller,0
+The Good Fight,Drama,0
+The Good Place,Comedy,0
+The Good Place,Fantasy,1
+The Good Wife,Drama,0
+The Handmaid's Tale,Sci-Fi,0
+The Haunting of Hill House,Horror,0
+The Killing,Crime,0
+The Knick,Drama,0
+The Larry Sanders Show,Comedy,0
+The Last of Us,Sci-Fi,0
+The Last of Us,Horror,1
+The Leftovers,Drama,0
+The Leftovers,Mystery,1
+The Mandalorian,Sci-Fi,0
+The Mandalorian,Western,1
+The Marvelous Mrs. Maisel,Comedy,0
+The Newsroom,Drama,0
+The Night Manager,Thriller,0
+The Night Of,Crime,0
+The OA,Sci-Fi,0
+The OA,Mystery,1
+The Office,Comedy,0
+The Office (UK),Comedy,0
+The Plot Against America,Historical,0
+The Responder,Crime,0
+The Returned (Les Revenants),Horror,0
+The Returned (Les Revenants),Mystery,1
+The Shield,Crime,0
+The Sinner,Mystery,0
+The Sinner,Crime,1
+The Sopranos,Crime,0
+The Terror,Horror,0
+The Terror,Historical,1
+The Tunnel,Crime,0
+The Twilight Zone,Sci-Fi,0
+The Umbrella Academy,Sci-Fi,0
+The West Wing,Political,0
+The Wheel of Time,Fantasy,0
+The Wire,Crime,0
+The Witcher,Fantasy,0
+The X-Files,Sci-Fi,0
+The X-Files,Mystery,1
+The Young Pope,Drama,0
+This Is Us,Drama,0
+Tokyo Vice,Crime,0
+Tom Clancy's Jack Ryan,Thriller,0
+Top Boy,Crime,0
+Top of the Lake,Mystery,0
+Top of the Lake,Crime,1
+Treme,Drama,0
+True Detective,Crime,0
+True Detective,Mystery,1
+Twin Peaks,Mystery,0
+Twin Peaks,Horror,1
+Unforgotten,Crime,0
+Veep,Comedy,0
+Veronica Mars,Mystery,0
+Veronica Mars,Crime,1
+Vikings,Historical,0
+Vikings,War,1
+Vinyl,Drama,0
+Wallander,Crime,0
+WandaVision,Sci-Fi,0
+Watchmen,Sci-Fi,0
+We Own This City,Crime,0
+Wednesday,Fantasy,0
+Wednesday,Mystery,1
+Westworld,Sci-Fi,0
+Westworld,Western,1
+What We Do in the Shadows,Comedy,0
+What We Do in the Shadows,Fantasy,1
+Years and Years,Drama,0
+Years and Years,Sci-Fi,1
+Yellowstone,Western,0
+Your Honor,Crime,0
+Your Honor,Thriller,1
+ZeroZeroZero,Crime,0
+ZeroZeroZero,Thriller,1

@@ -393,12 +393,17 @@ def cmd_query(args: argparse.Namespace) -> int:
 def cmd_tag_genres(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     with open(args.csv, newline="", encoding="utf-8") as f:
-        mapping = {r["show"]: r["genre"] for r in csv.DictReader(f)}
-    updated = db.tag_genres(conn, mapping)
-    untagged = conn.execute(
-        "SELECT COUNT(*) FROM show WHERE genre IS NULL"
-    ).fetchone()[0]
-    print(f"Tagged {updated} shows from {args.csv}. Genres: {db.get_genres(conn)}")
+        rows = [
+            (r["show"], r["genre"], int(r.get("rank", 0) or 0))
+            for r in csv.DictReader(f)
+        ]
+    inserted = db.tag_genres(conn, rows)
+    untagged = conn.execute("SELECT COUNT(*) FROM show WHERE genre IS NULL").fetchone()[0]
+    multi = sum(1 for gs in db.genres_multi(conn).values() if len(gs) > 1)
+    print(
+        f"Loaded {inserted} genre tags from {args.csv} ({multi} multi-genre shows). "
+        f"Genres: {db.get_genres(conn)}"
+    )
     if untagged:
         print(f"{untagged} shows still have no genre.", file=sys.stderr)
     return 0
