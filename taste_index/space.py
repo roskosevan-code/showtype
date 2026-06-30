@@ -121,40 +121,45 @@ def nearest_to_vector(
 
 def recommend(
     conn: sqlite3.Connection,
-    liked: list[str],
+    positives: dict[str, float],
     n: int = 10,
     allowed: set[str] | None = None,
-    disliked: list[str] | None = None,
+    negatives: list[str] | None = None,
     beta: float = 0.5,
 ) -> tuple[list[str], list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
-    """Recommend from a taste profile, optionally pushed away from disliked shows.
+    """Recommend from a *weighted* taste profile, pushed away from negatives.
 
-    The query point is the liked-shows centroid, shifted away from the disliked
-    centroid (Rocchio-style relevance feedback): target = C_like + beta*(C_like - C_dislike),
-    clamped to [0, 10]. With no dislikes this is just the liked centroid.
+    `positives` maps a liked title to an affinity weight (e.g. Loved 2, Liked 1,
+    Fine 0.4); the taste point is the weight-weighted centroid of those shows.
+    `negatives` (e.g. "not for me") shift the query away from their centroid
+    (Rocchio): target = C_like + beta*(C_like - C_neg), clamped to [0, 10].
 
-    Returns (recognised liked, recognised disliked, query vector, recommendations).
+    Returns (recognised positives, recognised negatives, query vector, recommendations).
     """
     axis_ids, _ = axis_index(conn)
     vecs = show_vectors(conn)
-    present = [t for t in liked if t in vecs and _complete(vecs[t], axis_ids)]
-    if not present:
+    pos = [
+        (t, w) for t, w in positives.items()
+        if w > 0 and t in vecs and _complete(vecs[t], axis_ids)
+    ]
+    if not pos:
         raise ValueError("none of the liked shows are in the DB")
-    neg = [t for t in (disliked or []) if t in vecs and _complete(vecs[t], axis_ids)]
+    neg = [t for t in (negatives or []) if t in vecs and _complete(vecs[t], axis_ids)]
 
-    c_like = {i: sum(vecs[t][i] for t in present) / len(present) for i in axis_ids}
+    wsum = sum(w for _, w in pos)
+    c_like = {i: sum(w * vecs[t][i] for t, w in pos) / wsum for i in axis_ids}
     if neg:
-        c_dis = {i: sum(vecs[t][i] for t in neg) / len(neg) for i in axis_ids}
+        c_neg = {i: sum(vecs[t][i] for t in neg) / len(neg) for i in axis_ids}
         target = {
-            i: min(10.0, max(0.0, c_like[i] + beta * (c_like[i] - c_dis[i])))
+            i: min(10.0, max(0.0, c_like[i] + beta * (c_like[i] - c_neg[i])))
             for i in axis_ids
         }
     else:
         target = c_like
 
-    exclude = set(liked) | set(disliked or [])
+    exclude = set(positives) | set(negatives or [])
     recs = nearest_to_vector(conn, target, n, exclude=exclude, allowed=allowed)
-    return present, neg, target, recs
+    return [t for t, _ in pos], neg, target, recs
 
 
 def parse_constraint(expr: str, conn: sqlite3.Connection) -> tuple[int, str, int]:

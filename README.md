@@ -81,12 +81,12 @@ shows baked in; similarity/recommendation/filter reimplemented in client-side JS
 open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
 
 The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
-nearest neighbours and recommends from a taste profile (the centroid of shows you like —
-e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon). You can
-also add **shows you don't like**: the query point is pushed away from their centroid
-(Rocchio-style), so the recommendations shift in the opposite direction. A third panel
-**filters by axis profile** with min/max sliders per axis (e.g. Sweep 8–10 + Register 0–4
-+ Verisimilitude 8–10 → the restrained systems-storytelling cluster).
+nearest neighbours and recommends from your **graded reactions** — react to any show with
+❤ loved / 👍 liked / 😐 fine / 👎 not-for-me, and the recommender builds a *weighted*
+taste centroid (Loved counts 2×, Liked 1×, Fine 0.4×) pushed away from not-for-me shows
+(Rocchio). Reactions persist in `localStorage`. A third panel **filters by axis profile**
+with min/max sliders per axis (e.g. Sweep 8–10 + Register 0–4 + Verisimilitude 8–10 → the
+restrained systems-storytelling cluster).
 
 **Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is
 primary) are categorical metadata — the axes are *structural*, so they don't encode

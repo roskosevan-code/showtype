@@ -84,13 +84,18 @@ def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> d
     }
 
 
-def _recommend(conn, liked: list[str], n: int, genre: str | None, disliked: list[str]) -> dict:
+# Affinity reaction -> weight for the weighted-centroid recommender.
+REACTION_WEIGHTS = {"loved": 2.0, "liked": 1.0, "fine": 0.4}
+
+
+def _recommend(conn, positives: dict[str, float], negatives: list[str], n: int,
+               genre: str | None) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
     qmap = db.quality_map(conn)
     allowed = db.shows_with_genre(conn, genre) if genre else None
     present, neg, target, recs = space.recommend(
-        conn, liked, n=n, allowed=allowed, disliked=disliked
+        conn, positives, n=n, allowed=allowed, negatives=negatives
     )
     return {
         "liked": present,
@@ -147,11 +152,15 @@ class _Handler(BaseHTTPRequestHandler):
                 same = q.get("same_genre", ["0"])[0] == "1"
                 return self._json(_similar(conn, q.get("title", [""])[0], n, genre, same))
             if u.path == "/api/recommend":
-                liked = [s for s in q.get("like", [""])[0].split("|") if s]
-                disliked = [s for s in q.get("dislike", [""])[0].split("|") if s]
+                positives = {}
+                for reaction, weight in REACTION_WEIGHTS.items():
+                    for t in q.get(reaction, [""])[0].split("|"):
+                        if t:
+                            positives[t] = weight
+                negatives = [s for s in q.get("nope", [""])[0].split("|") if s]
                 n = int(q.get("n", ["12"])[0])
                 genre = q.get("genre", [""])[0] or None
-                return self._json(_recommend(conn, liked, n, genre, disliked))
+                return self._json(_recommend(conn, positives, negatives, n, genre))
             if u.path == "/api/query":
                 cons = []
                 for f in q.get("f", []):
@@ -233,6 +242,11 @@ PAGE = """<!doctype html>
   .act { background:transparent; border:1px solid var(--line); color:var(--mut); width:22px; height:22px; border-radius:6px; cursor:pointer; padding:0; font-size:15px; line-height:1; }
   .act:hover { color:var(--ink); border-color:var(--acc); }
   .act.lk-on { color:var(--acc); border-color:var(--acc); }
+  .rx { display:inline-flex; gap:1px; }
+  .rxb { background:transparent; border:1px solid transparent; border-radius:5px; cursor:pointer; padding:1px 3px; font-size:14px; line-height:1; opacity:.45; }
+  .rxb:hover { opacity:1; }
+  .rxb.on { opacity:1; border-color:var(--acc); background:#0f0d0b; }
+  .hint { color:var(--mut); font-size:12.5px; margin:-4px 0 10px; }
   .err { color:#e0795b; font-size:13px; }
 </style></head>
 <body>
@@ -246,11 +260,10 @@ PAGE = """<!doctype html>
     <div id="profile"></div>
   </section>
   <section class="card">
-    <h2>Recommend from shows you like</h2>
-    <div class="row"><input id="likeInput" type="text" list="shows" placeholder="Add a show you like&hellip;" autocomplete="off"><button id="addLike">+ Like</button></div>
+    <h2>Your taste &rarr; recommendations</h2>
+    <div class="hint">React to any show with &#10084; loved &middot; &#128077; liked &middot; &#128528; fine &middot; &#128078; not for me. Loved counts most.</div>
+    <div class="row"><input id="reactInput" type="text" list="shows" placeholder="Add a show, then react&hellip;" autocomplete="off"><button id="addReact">Add</button></div>
     <div id="chips" class="chips"></div>
-    <div class="row"><input id="dislikeInput" type="text" list="shows" placeholder="Add a show you don&rsquo;t like&hellip;" autocomplete="off"><button id="addDislike" class="ghost">&minus; Dislike</button></div>
-    <div id="dchips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
     <label class="chk"><input type="checkbox" id="sortQ"> Sort by quality</label>
     <div id="recs"></div>
@@ -263,8 +276,10 @@ PAGE = """<!doctype html>
   </section>
 </div>
 <script>
-let AXES=[], GENRES=[];
-const liked=[], disliked=[];
+let AXES=[], GENRES=[], TITLESET=new Set();
+const RX=[['loved','❤'],['liked','👍'],['fine','😐'],['nope','👎']];
+let reactions=JSON.parse(localStorage.getItem('ti-reactions')||'{}');
+const saveReactions=()=>localStorage.setItem('ti-reactions',JSON.stringify(reactions));
 const $=s=>document.querySelector(s);
 const j=async u=>{const r=await fetch(u);return r.json();};
 
@@ -276,7 +291,7 @@ function bars(values){
 }
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
-const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
+const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${r}">${em}</button>`).join('')+'</span>';};
 function whyText(v,ref){
   const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
   const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
@@ -287,7 +302,7 @@ function whyText(v,ref){
 }
 function rowItem(title,genres,quality,tail,why){
   const e=encodeURIComponent(title);
-  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${rxBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
 }
 function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
@@ -300,7 +315,7 @@ async function loadShow(title){
   if(d.error){ $('#profile').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   const sameG=$('#simSameGenre').checked?'&same_genre=1':'';
   const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
-  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}${qbadge(d.quality)}</div>`;
+  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}${qbadge(d.quality)} ${rxBtns(title)}</div>`;
   if(d.summary) html+=`<div class="summary">${d.summary}</div>`;
   const meta=[]; if(d.episodes) meta.push('&approx;'+d.episodes+' episodes'); if(d.seasons) meta.push(d.seasons+' season'+(d.seasons===1?'':'s'));
   if(meta.length) html+=`<div class="metaline">${meta.join(' &middot; ')}</div>`;
@@ -311,10 +326,18 @@ async function loadShow(title){
   $('#profile').innerHTML=html;
 }
 
-const chipHtml=(arr,list)=>arr.map((t,i)=>`<span class="chip">${t}<b data-list="${list}" data-i="${i}">&times;</b></span>`).join('');
+function setReaction(t,r){
+  if(reactions[t]===r) delete reactions[t]; else reactions[t]=r;
+  saveReactions(); renderChips();
+  if($('#pick').value) loadShow($('#pick').value);
+  if($('#recs').innerHTML) recommend();
+}
 function renderChips(){
-  $('#chips').innerHTML=chipHtml(liked,'like')||'<span class="dist">No likes yet.</span>';
-  $('#dchips').innerHTML=chipHtml(disliked,'dislike');
+  const ts=Object.keys(reactions);
+  if(!ts.length){ $('#chips').innerHTML='<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
+  const ord={loved:0,liked:1,fine:2,nope:3}, em=r=>RX.find(x=>x[0]===r)[1];
+  ts.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
+  $('#chips').innerHTML=ts.map(t=>`<span class="chip">${em(reactions[t])} ${t}<b data-rm="${encodeURIComponent(t)}">&times;</b></span>`).join('');
 }
 
 function buildFilters(){
@@ -344,48 +367,41 @@ async function runQuery(){
   $('#filterResults').innerHTML=html;
 }
 async function recommend(){
-  if(!liked.length){ $('#recs').innerHTML='<div class="dist">Add a few shows you like first.</div>'; return; }
+  const groups={loved:[],liked:[],fine:[],nope:[]};
+  for(const t in reactions) groups[reactions[t]].push(t);
+  if(!groups.loved.length&&!groups.liked.length&&!groups.fine.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
   const g=$('#recGenre').value;
-  const gp=g?'&genre='+encodeURIComponent(g):'';
-  const dp=disliked.length?'&dislike='+disliked.map(encodeURIComponent).join('|'):'';
-  const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp+dp);
+  const p=new URLSearchParams({n:'12'});
+  ['loved','liked','fine','nope'].forEach(r=>{ if(groups[r].length) p.set(r,groups[r].join('|')); });
+  if(g) p.set('genre',g);
+  const d=await j('/api/recommend?'+p.toString());
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' disliked';
+  let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' not-for-me';
   let recs=d.recommendations;
   if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
   $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs, d.centroid);
 }
 
-function addPref(title,kind){
-  const arr=kind==='dislike'?disliked:liked, other=kind==='dislike'?liked:disliked;
-  const oi=other.indexOf(title); if(oi>=0) other.splice(oi,1);
-  if(!arr.includes(title)) arr.push(title);
-  renderChips();
-  if($('#pick').value) loadShow($('#pick').value);
-  if(liked.length) recommend();
-}
 document.addEventListener('click',e=>{
   const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
-  const a=e.target.closest('.act'); if(a){ addPref(decodeURIComponent(a.dataset.t),a.dataset.act); return; }
+  const rx=e.target.closest('.rxb'); if(rx){ setReaction(decodeURIComponent(rx.dataset.t),rx.dataset.rx); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
-  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); if(liked.length&&$('#recs').innerHTML) recommend(); }
+  const x=e.target.closest('.chip b'); if(x){ delete reactions[decodeURIComponent(x.dataset.rm)]; saveReactions(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
-$('#addLike').addEventListener('click',()=>{ const v=$('#likeInput').value.trim(); if(v&&!liked.includes(v)){ liked.push(v); renderChips(); } $('#likeInput').value=''; });
-$('#likeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addLike').click(); });
-$('#addDislike').addEventListener('click',()=>{ const v=$('#dislikeInput').value.trim(); if(v&&!disliked.includes(v)){ disliked.push(v); renderChips(); } $('#dislikeInput').value=''; });
-$('#dislikeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addDislike').click(); });
+$('#addReact').addEventListener('click',()=>{ const v=$('#reactInput').value.trim(); if(v&&TITLESET.has(v)){ if(!reactions[v]){ reactions[v]='liked'; saveReactions(); } loadShow(v); renderChips(); } $('#reactInput').value=''; });
+$('#reactInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addReact').click(); });
 $('#recBtn').addEventListener('click',recommend);
-$('#sortQ').addEventListener('change',()=>{ if(liked.length&&$('#recs').innerHTML) recommend(); });
-$('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0; renderChips(); $('#recs').innerHTML=''; });
+$('#sortQ').addEventListener('change',()=>{ if($('#recs').innerHTML) recommend(); });
+$('#clearBtn').addEventListener('click',()=>{ reactions={}; saveReactions(); renderChips(); $('#recs').innerHTML=''; if($('#pick').value) loadShow($('#pick').value); });
 $('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
 $('#applyFilter').addEventListener('click',runQuery);
 $('#resetFilter').addEventListener('click',()=>{ document.querySelectorAll('.frow').forEach(r=>{ r.querySelector('[data-kind=min]').value=0; r.querySelector('[data-kind=max]').value=10; $('#frd-'+r.dataset.axis).innerHTML='0&ndash;10'; }); $('#filterResults').innerHTML=''; });
 
 (async()=>{
   const m=await j('/api/meta');
-  AXES=m.axes; GENRES=m.genres||[];
+  AXES=m.axes; GENRES=m.genres||[]; TITLESET=new Set(m.shows);
   $('#shows').innerHTML=m.shows.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('');
   $('#recGenre').innerHTML='<option value="">All genres</option>'+GENRES.map(g=>`<option value="${g}">${g}</option>`).join('');
   renderChips();
