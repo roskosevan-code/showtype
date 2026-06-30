@@ -17,13 +17,24 @@ def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     return conn
 
 
+_SHOW_COLUMNS = {
+    "genre": "TEXT",
+    "quality": "INTEGER",
+    "quality_reason": "TEXT",
+    "summary": "TEXT",
+    "episodes": "INTEGER",
+    "seasons": "INTEGER",
+}
+
+
 def init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
-    # Idempotent migration: add `genre` to pre-existing show tables.
+    # Idempotent migration: add any new show columns to pre-existing DBs.
     cols = {r[1] for r in conn.execute("PRAGMA table_info(show)")}
-    if "genre" not in cols:
-        with conn:
-            conn.execute("ALTER TABLE show ADD COLUMN genre TEXT")
+    with conn:
+        for name, typ in _SHOW_COLUMNS.items():
+            if name not in cols:
+                conn.execute(f"ALTER TABLE show ADD COLUMN {name} {typ}")
 
 
 def seed_axes(conn: sqlite3.Connection, axes: list[Axis]) -> None:
@@ -138,6 +149,36 @@ def get_genres(conn: sqlite3.Connection) -> list[str]:
             "SELECT genre, COUNT(*) n FROM show_genre GROUP BY genre ORDER BY n DESC, genre"
         )
     ]
+
+
+def load_quality(conn: sqlite3.Connection, rows: list[tuple]) -> int:
+    """Apply quality/summary/episode metadata. Rows: (title, quality, reason,
+    summary, episodes, seasons). Updates only existing shows; returns count updated."""
+    updated = 0
+    with conn:
+        for title, quality, reason, summary, episodes, seasons in rows:
+            cur = conn.execute(
+                "UPDATE show SET quality=?, quality_reason=?, summary=?, episodes=?, "
+                "seasons=? WHERE title=?",
+                (quality, reason, summary, episodes, seasons, title),
+            )
+            updated += cur.rowcount
+    return updated
+
+
+def get_show_meta(conn: sqlite3.Connection, title: str) -> sqlite3.Row | None:
+    return conn.execute(
+        "SELECT genre, quality, quality_reason, summary, episodes, seasons "
+        "FROM show WHERE title=?",
+        (title,),
+    ).fetchone()
+
+
+def quality_map(conn: sqlite3.Connection) -> dict[str, int]:
+    return {
+        r["title"]: r["quality"]
+        for r in conn.execute("SELECT title, quality FROM show WHERE quality IS NOT NULL")
+    }
 
 
 def get_show_scores(conn: sqlite3.Connection, title: str) -> list[sqlite3.Row]:

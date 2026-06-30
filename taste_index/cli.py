@@ -23,6 +23,7 @@ DEFAULT_RUBRIC = "docs/rubric.md"
 DEFAULT_BASELINE_CSV = "docs/baseline-scores.csv"  # model-scored under current rubric
 DEFAULT_CATALOG_CSV = "docs/catalog-scores.csv"    # full retrieval catalog
 DEFAULT_GENRES_CSV = "docs/genres.csv"
+DEFAULT_QUALITY_CSV = "docs/quality.csv"
 PHASE0_MODEL = "phase0-handscored"  # fallback when a CSV has no `model` column
 
 
@@ -410,6 +411,27 @@ def cmd_tag_genres(args: argparse.Namespace) -> int:
     return 0
 
 
+def _int_or_none(v: str):
+    v = (v or "").strip()
+    return int(v) if v not in ("", "None", "null") else None
+
+
+def cmd_load_quality(args: argparse.Namespace) -> int:
+    conn = db.connect(args.db)
+    with open(args.csv, newline="", encoding="utf-8") as f:
+        rows = [
+            (r["show"], _int_or_none(r["quality"]), r["quality_reason"], r["summary"],
+             _int_or_none(r["episodes"]), _int_or_none(r["seasons"]))
+            for r in csv.DictReader(f)
+        ]
+    updated = db.load_quality(conn, rows)
+    missing = conn.execute("SELECT COUNT(*) FROM show WHERE quality IS NULL").fetchone()[0]
+    print(f"Loaded quality/summary for {updated} shows from {args.csv}.")
+    if missing:
+        print(f"{missing} shows still have no quality.", file=sys.stderr)
+    return 0
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     import os
 
@@ -507,6 +529,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("tag-genres", help="set show genres from a show,genre CSV")
     sp.add_argument("--csv", default=DEFAULT_GENRES_CSV)
     sp.set_defaults(func=cmd_tag_genres)
+
+    sp = sub.add_parser("load-quality", help="load quality/summary/episodes from a CSV")
+    sp.add_argument("--csv", default=DEFAULT_QUALITY_CSV)
+    sp.set_defaults(func=cmd_load_quality)
 
     sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps; auto-builds DB)")
     sp.add_argument("--host", default="127.0.0.1")

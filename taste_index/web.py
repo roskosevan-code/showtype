@@ -41,13 +41,24 @@ def _show(conn, title: str) -> dict:
         }
         for r, code in zip(rows, space.AXIS_CODES)
     ]
-    return {"title": title, "genres": db.genres_multi(conn).get(title, []), "scores": scores}
+    m = db.get_show_meta(conn, title)
+    meta = dict(m) if m else {}
+    return {
+        "title": title,
+        "genres": db.genres_multi(conn).get(title, []),
+        "quality": meta.get("quality"),
+        "quality_reason": meta.get("quality_reason"),
+        "summary": meta.get("summary"),
+        "episodes": meta.get("episodes"),
+        "seasons": meta.get("seasons"),
+        "scores": scores,
+    }
 
 
-def _neighbor_list(items, axis_ids, gmulti):
+def _neighbor_list(items, axis_ids, gmulti, qmap):
     return [
         {"title": t, "distance": round(d, 2), "genres": gmulti.get(t, []),
-         "values": _values(v, axis_ids)}
+         "quality": qmap.get(t), "values": _values(v, axis_ids)}
         for t, d, v in items
     ]
 
@@ -55,6 +66,7 @@ def _neighbor_list(items, axis_ids, gmulti):
 def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
+    qmap = db.quality_map(conn)
     allowed: set[str] | None = None
     if genre:
         allowed = db.shows_with_genre(conn, genre)
@@ -68,13 +80,14 @@ def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> d
         "title": title,
         "genres": gmulti.get(title, []),
         "values": _values(target, axis_ids),
-        "neighbors": _neighbor_list(neighbors, axis_ids, gmulti),
+        "neighbors": _neighbor_list(neighbors, axis_ids, gmulti, qmap),
     }
 
 
 def _recommend(conn, liked: list[str], n: int, genre: str | None, disliked: list[str]) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
+    qmap = db.quality_map(conn)
     allowed = db.shows_with_genre(conn, genre) if genre else None
     present, neg, target, recs = space.recommend(
         conn, liked, n=n, allowed=allowed, disliked=disliked
@@ -83,16 +96,18 @@ def _recommend(conn, liked: list[str], n: int, genre: str | None, disliked: list
         "liked": present,
         "disliked": neg,
         "centroid": [round(target[i], 1) for i in axis_ids],
-        "recommendations": _neighbor_list(recs, axis_ids, gmulti),
+        "recommendations": _neighbor_list(recs, axis_ids, gmulti, qmap),
     }
 
 
 def _query(conn, constraints, limit: int = 60) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
+    qmap = db.quality_map(conn)
     matches = space.query(conn, constraints)
     items = [
-        {"title": t, "genres": gmulti.get(t, []), "values": _values(v, axis_ids)}
+        {"title": t, "genres": gmulti.get(t, []), "quality": qmap.get(t),
+         "values": _values(v, axis_ids)}
         for t, v in matches
     ]
     return {"count": len(items), "matches": items[:limit]}
@@ -196,6 +211,11 @@ PAGE = """<!doctype html>
   .nrow { display:flex; justify-content:space-between; align-items:center; }
   .why { color:var(--mut); font-size:12.5px; margin:5px 0 2px; }
   .why b { color:var(--ink); font-weight:600; }
+  .qb { border:1px solid var(--acc); color:var(--acc); border-radius:5px; padding:0 6px; font-size:11px; font-weight:600; margin-left:8px; }
+  .summary { color:var(--ink); font-size:14px; margin:6px 0 2px; }
+  .metaline { color:var(--mut); font-size:12.5px; margin-bottom:8px; }
+  .qblock { margin-top:12px; padding:10px 12px; background:#0f0d0b; border:1px solid var(--line); border-radius:8px; font-size:13px; }
+  .qblock b { color:var(--acc); }
   .lk { background:none; border:0; color:var(--acc); cursor:pointer; padding:0; font:inherit; text-align:left; }
   .dist { color:var(--mut); font-variant-numeric:tabular-nums; font-size:12.5px; }
   .badge { background:#0f0d0b; border:1px solid var(--line); color:var(--mut); border-radius:5px; padding:1px 7px; font-size:11.5px; margin-left:8px; }
@@ -232,6 +252,7 @@ PAGE = """<!doctype html>
     <div class="row"><input id="dislikeInput" type="text" list="shows" placeholder="Add a show you don&rsquo;t like&hellip;" autocomplete="off"><button id="addDislike" class="ghost">&minus; Dislike</button></div>
     <div id="dchips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
+    <label class="chk"><input type="checkbox" id="sortQ"> Sort by quality</label>
     <div id="recs"></div>
   </section>
   <section class="card grid-full">
@@ -254,6 +275,7 @@ function bars(values){
   }).join('')+'</div>';
 }
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
+const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
 const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
 function whyText(v,ref){
   const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
@@ -263,13 +285,13 @@ function whyText(v,ref){
   if(far.gap>=3) s+=' &middot; differs on <b>'+far.n+'</b> ('+far.v+' vs ~'+far.r+')';
   return s;
 }
-function rowItem(title,genres,tail,why){
+function rowItem(title,genres,quality,tail,why){
   const e=encodeURIComponent(title);
-  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
 }
 function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,it.quality,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
 }
 
 async function loadShow(title){
@@ -278,8 +300,13 @@ async function loadShow(title){
   if(d.error){ $('#profile').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   const sameG=$('#simSameGenre').checked?'&same_genre=1':'';
   const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
-  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}</div>`+bars(d.scores.map(s=>s.value));
+  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}${qbadge(d.quality)}</div>`;
+  if(d.summary) html+=`<div class="summary">${d.summary}</div>`;
+  const meta=[]; if(d.episodes) meta.push('&approx;'+d.episodes+' episodes'); if(d.seasons) meta.push(d.seasons+' season'+(d.seasons===1?'':'s'));
+  if(meta.length) html+=`<div class="metaline">${meta.join(' &middot; ')}</div>`;
+  html+=bars(d.scores.map(s=>s.value));
   html+=d.scores.map(s=>`<div class="just"><b>${s.axis} ${s.value}</b> &middot; ${s.justification} <i>(${s.confidence})</i></div>`).join('');
+  if(d.quality!=null) html+=`<div class="qblock"><b>Execution ${d.quality}/10</b> &middot; ${d.quality_reason||''}</div>`;
   html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(sim.neighbors, sim.values);
   $('#profile').innerHTML=html;
 }
@@ -312,7 +339,7 @@ async function runQuery(){
   const d=await j('/api/query?'+fs.map(s=>`f=${s.id},${s.min},${s.max}`).join('&'));
   const head=`${d.count} show${d.count===1?'':'s'} match`+(fs.length?'':' (no filter)');
   let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+
-    d.matches.map(m=>rowItem(m.title,m.genres,'')).join('')+'</ul>';
+    d.matches.map(m=>rowItem(m.title,m.genres,m.quality,'')).join('')+'</ul>';
   if(d.count>d.matches.length) html+=`<div class="dist">showing first ${d.matches.length}</div>`;
   $('#filterResults').innerHTML=html;
 }
@@ -324,7 +351,9 @@ async function recommend(){
   const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp+dp);
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' disliked';
-  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations, d.centroid);
+  let recs=d.recommendations;
+  if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
+  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs, d.centroid);
 }
 
 function addPref(title,kind){
@@ -348,6 +377,7 @@ $('#likeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addLike'
 $('#addDislike').addEventListener('click',()=>{ const v=$('#dislikeInput').value.trim(); if(v&&!disliked.includes(v)){ disliked.push(v); renderChips(); } $('#dislikeInput').value=''; });
 $('#dislikeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addDislike').click(); });
 $('#recBtn').addEventListener('click',recommend);
+$('#sortQ').addEventListener('change',()=>{ if(liked.length&&$('#recs').innerHTML) recommend(); });
 $('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0; renderChips(); $('#recs').innerHTML=''; });
 $('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
 $('#applyFilter').addEventListener('click',runQuery);

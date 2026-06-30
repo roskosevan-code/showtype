@@ -16,10 +16,15 @@ CREATE TABLE IF NOT EXISTS axis (
 
 -- A scored show.
 CREATE TABLE IF NOT EXISTS show (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    title      TEXT NOT NULL UNIQUE,
-    genre      TEXT,                          -- primary genre (rank 0), denormalized for display
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    title           TEXT NOT NULL UNIQUE,
+    genre           TEXT,                     -- primary genre (rank 0), denormalized for display
+    quality         INTEGER,                  -- model-judged execution score 0-10 (evaluative; see docs/quality.csv)
+    quality_reason  TEXT,                     -- one-to-two sentence justification for quality
+    summary         TEXT,                     -- short spoiler-free premise
+    episodes        INTEGER,                  -- approximate total episode count (model estimate; may be null)
+    seasons         INTEGER,                  -- number of seasons (model estimate; may be null)
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- A show may carry several genres; rank 0 is the primary. See docs/genres.csv.

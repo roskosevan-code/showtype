@@ -34,6 +34,7 @@ const genresOf=t=>(SHOWS[t]?SHOWS[t].genres:[]);
 const showsWithGenre=g=>TITLES.filter(t=>genresOf(t).includes(g));
 const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.length);
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
+const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
 const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
 function whyText(v,ref){
   const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
@@ -43,9 +44,9 @@ function whyText(v,ref){
   if(far.gap>=3) s+=' &middot; differs on <b>'+far.n+'</b> ('+far.v+' vs ~'+far.r+')';
   return s;
 }
-function rowItem(title,genres,tail,why){
+function rowItem(title,genres,quality,tail,why){
   const e=encodeURIComponent(title);
-  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
 }
 
 function bars(values){
@@ -54,11 +55,11 @@ function bars(values){
 }
 function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,it.quality,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
 }
 function nearestTo(vec,n,exclude,allowed){
   return TITLES.filter(t=>!exclude.has(t)&&(!allowed||allowed.has(t)))
-    .map(t=>({title:t,distance:+dist(vec,SHOWS[t].values).toFixed(2),genres:genresOf(t),values:SHOWS[t].values}))
+    .map(t=>({title:t,distance:+dist(vec,SHOWS[t].values).toFixed(2),genres:genresOf(t),quality:SHOWS[t].quality,values:SHOWS[t].values}))
     .sort((a,b)=>a.distance-b.distance).slice(0,n);
 }
 function loadShow(title){
@@ -68,8 +69,13 @@ function loadShow(title){
   let allowed=null;
   if($('#simSameGenre').checked){ allowed=new Set(); genresOf(title).forEach(g=>showsWithGenre(g).forEach(t=>allowed.add(t))); }
   const neighbors=nearestTo(s.values,8,new Set([title]),allowed);
-  let html=`<div style="margin:8px 0 2px">${gbadges(s.genres)}</div>`+bars(s.values);
+  let html=`<div style="margin:8px 0 2px">${gbadges(s.genres)}${qbadge(s.quality)}</div>`;
+  if(s.summary) html+=`<div class="summary">${s.summary}</div>`;
+  const meta=[]; if(s.episodes) meta.push('&approx;'+s.episodes+' episodes'); if(s.seasons) meta.push(s.seasons+' season'+(s.seasons===1?'':'s'));
+  if(meta.length) html+=`<div class="metaline">${meta.join(' &middot; ')}</div>`;
+  html+=bars(s.values);
   html+=s.scores.map(x=>`<div class="just"><b>${x.axis} ${x.value}</b> &middot; ${x.justification} <i>(${x.confidence})</i></div>`).join('');
+  if(s.quality!=null) html+=`<div class="qblock"><b>Execution ${s.quality}/10</b> &middot; ${s.quality_reason||''}</div>`;
   html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(neighbors,s.values);
   $('#profile').innerHTML=html;
 }
@@ -90,7 +96,9 @@ function recommend(){
   const allowed=g?new Set(showsWithGenre(g)):null;
   const recs=nearestTo(target,12,new Set([...liked,...disliked]),allowed);
   let head='Recommended'; if(g) head+=' &middot; '+g; if(neg.length) head+=' &middot; away from '+neg.length+' disliked';
-  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs,target);
+  let out=recs;
+  if($('#sortQ').checked){ head+=' &middot; by quality'; out=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
+  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(out,target);
 }
 
 function buildFilters(){
@@ -106,7 +114,7 @@ function runQuery(){
   const matches=TITLES.filter(t=>fs.every(s=>{const v=SHOWS[t].values[s.id-1]; return v>=s.min&&v<=s.max;}));
   const shown=matches.slice(0,60);
   const head=`${matches.length} show${matches.length===1?'':'s'} match`+(fs.length?'':' (no filter)');
-  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+shown.map(t=>rowItem(t,genresOf(t),'')).join('')+'</ul>';
+  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+shown.map(t=>rowItem(t,genresOf(t),SHOWS[t].quality,'')).join('')+'</ul>';
   if(matches.length>shown.length) html+=`<div class="dist">showing first ${shown.length}</div>`;
   $('#filterResults').innerHTML=html;
 }
@@ -132,6 +140,7 @@ $('#likeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addLike'
 $('#addDislike').addEventListener('click',()=>{ const v=$('#dislikeInput').value.trim(); if(v&&!disliked.includes(v)){ disliked.push(v); renderChips(); } $('#dislikeInput').value=''; });
 $('#dislikeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addDislike').click(); });
 $('#recBtn').addEventListener('click',recommend);
+$('#sortQ').addEventListener('change',()=>{ if(liked.length&&$('#recs').innerHTML) recommend(); });
 $('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0; renderChips(); $('#recs').innerHTML=''; });
 $('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
 $('#applyFilter').addEventListener('click',runQuery);
@@ -154,6 +163,11 @@ def build_data(conn) -> dict:
             "genres": s["genres"],
             "scores": s["scores"],
             "values": [vecs[t][i] for i in axis_ids],
+            "quality": s.get("quality"),
+            "quality_reason": s.get("quality_reason"),
+            "summary": s.get("summary"),
+            "episodes": s.get("episodes"),
+            "seasons": s.get("seasons"),
         }
     return {"axes": meta["axes"], "genres": meta["genres"], "shows": shows}
 
