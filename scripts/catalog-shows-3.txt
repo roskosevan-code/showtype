@@ -1,0 +1,572 @@
+# Catalog expansion, round 3 — ~520 titles for `score-batch --file`.
+# Overlaps with the existing catalog are skipped (--skip-existing), netting ~500 new.
+# One title per line; lines starting with # are ignored.
+
+# --- US network drama / procedural ---
+Grey's Anatomy
+Private Practice
+Scandal
+How to Get Away with Murder
+Bridgerton
+The Practice
+Boston Legal
+Ally McBeal
+Chicago Fire
+Chicago P.D.
+Chicago Med
+Law & Order
+Law & Order: Special Victims Unit
+Law & Order: Criminal Intent
+CSI: Crime Scene Investigation
+CSI: Miami
+NCIS
+Criminal Minds
+Bones
+Castle
+The Mentalist
+Elementary
+The Good Doctor
+New Amsterdam
+The Resident
+9-1-1
+Blue Bloods
+The Blacklist
+Numb3rs
+Cold Case
+Without a Trace
+Monk
+Psych
+White Collar
+Burn Notice
+Suits
+The Closer
+Major Crimes
+Hawaii Five-0
+Designated Survivor
+Madam Secretary
+Chicago Hope
+The Good Doctor
+Nip/Tuck
+Rescue Me
+Pose
+American Horror Story
+American Crime Story
+Legion
+The Strain
+Y: The Last Man
+Dave
+Terriers
+The Americans
+Lights Out
+
+# --- US sitcoms ---
+Friends
+Everybody Loves Raymond
+How I Met Your Mother
+The Big Bang Theory
+Young Sheldon
+Modern Family
+The Middle
+Black-ish
+Fresh Off the Boat
+Two and a Half Men
+Will & Grace
+The King of Queens
+Malcolm in the Middle
+Roseanne
+Married... with Children
+Home Improvement
+Family Matters
+The Fresh Prince of Bel-Air
+Full House
+That '70s Show
+Spin City
+NewsRadio
+Wings
+Murphy Brown
+The Golden Girls
+Mad About You
+3rd Rock from the Sun
+Night Court
+Taxi
+M*A*S*H
+Happy Days
+The Mary Tyler Moore Show
+Frasier
+The Drew Carey Show
+Everybody Hates Chris
+New Girl
+The Mindy Project
+Happy Endings
+Superstore
+The Goldbergs
+American Auto
+Ghosts
+Only Murders in the Building
+Grace and Frankie
+The Kominsky Method
+Dead to Me
+GLOW
+After Life
+Shrinking
+The Other Two
+
+# --- animated comedy ---
+The Simpsons
+Family Guy
+South Park
+Futurama
+Rick and Morty
+Archer
+King of the Hill
+American Dad!
+Bob's Burgers
+Beavis and Butt-Head
+Daria
+The Boondocks
+Big Mouth
+F is for Family
+Disenchantment
+Solar Opposites
+Harley Quinn
+Invincible
+Castlevania
+Arcane
+Love, Death & Robots
+Primal
+Scavengers Reign
+Avatar: The Last Airbender
+The Legend of Korra
+
+# --- anime ---
+Cowboy Bebop
+Death Note
+Attack on Titan
+Fullmetal Alchemist: Brotherhood
+Neon Genesis Evangelion
+One Piece
+Naruto
+Bleach
+Dragon Ball Z
+Demon Slayer
+Jujutsu Kaisen
+My Hero Academia
+Hunter x Hunter
+Steins;Gate
+Code Geass
+Monster
+Vinland Saga
+Mob Psycho 100
+Spy x Family
+Chainsaw Man
+Made in Abyss
+Your Lie in April
+Violet Evergarden
+Samurai Champloo
+Trigun
+Berserk
+Ghost in the Shell: Stand Alone Complex
+Psycho-Pass
+Erased
+Frieren: Beyond Journey's End
+Cyberpunk: Edgerunners
+Haikyuu!!
+One Punch Man
+
+# --- prestige cable / premium ---
+Big Love
+True Blood
+The Comeback
+Looking
+Enlightened
+The White Lotus
+Euphoria
+I May Destroy You
+Insecure
+Ballers
+Doom Patrol
+Peacemaker
+Our Flag Means Death
+Somebody Somewhere
+The Outsider
+The Undoing
+The Flight Attendant
+Mrs. America
+The Gilded Age
+Winning Time
+The Regime
+Scenes from a Marriage
+The Sympathizer
+The Penguin
+I Know This Much Is True
+Sharp Objects
+Yellowjackets
+Shameless
+Weeds
+Californication
+The Affair
+Masters of Sex
+The Tudors
+The Borgias
+The Chi
+City on a Hill
+Escape at Dannemora
+Spartacus
+Vida
+P-Valley
+Gaslit
+
+# --- AMC / FX / cable drama ---
+The Walking Dead
+Fear the Walking Dead
+Hell on Wheels
+TURN: Washington's Spies
+Into the Badlands
+Preacher
+Humans
+Lodge 49
+Dark Winds
+Interview with the Vampire
+The Bridge
+Tyrant
+Mayans M.C.
+Snowpiercer
+Halt and Catch Fire
+
+# --- Netflix originals ---
+The Queen's Gambit
+Unbelievable
+When They See Us
+Maid
+Bridgerton
+The Last Kingdom
+Marco Polo
+Sweet Tooth
+Shadow and Bone
+Locke & Key
+The Sandman
+Inventing Anna
+Dahmer – Monster: The Jeffrey Dahmer Story
+The Watcher
+Ratched
+Hollywood
+Baby Reindeer
+Adolescence
+The Diplomat
+Griselda
+The Night Agent
+One Day
+Heartstopper
+Elite
+Cable Girls
+Alice in Borderland
+Sweet Home
+Dark Desire
+Who Killed Sara?
+The Empress
+Barbarians
+Kleo
+How to Sell Drugs Online (Fast)
+Unorthodox
+Shtisel
+
+# --- HBO / Max + Apple + Hulu + Showtime ---
+The Morning Show
+For All Mankind
+See
+Defending Jacob
+Servant
+Bad Sisters
+Black Bird
+Sugar
+Lessons in Chemistry
+Masters of the Air
+Monarch: Legacy of Monsters
+Hijack
+Constellation
+Presumed Innocent
+Physical
+Dickinson
+Mythic Quest
+Castle Rock
+11.22.63
+The Act
+Dopesick
+The Dropout
+Pam & Tommy
+Nine Perfect Strangers
+Little Fires Everywhere
+The Path
+Harlots
+Catch-22
+Ramy
+Future Man
+
+# --- superhero / comic ---
+Daredevil
+Jessica Jones
+Luke Cage
+The Punisher
+Agents of S.H.I.E.L.D.
+WandaVision
+Moon Knight
+Ms. Marvel
+She-Hulk: Attorney at Law
+Gen V
+The Boys
+Titans
+Gotham
+Arrow
+The Flash
+Smallville
+Supergirl
+Daredevil: Born Again
+The Penguin
+
+# --- sci-fi / fantasy / genre ---
+Stargate Atlantis
+Star Trek: Voyager
+Star Trek: Enterprise
+Star Trek: Discovery
+Star Trek: Picard
+Star Trek: Strange New Worlds
+The Orville
+Torchwood
+The Man in the High Castle
+Travelers
+Continuum
+Orphan Black
+Heroes
+The 4400
+Eureka
+Warehouse 13
+Undone
+The Lord of the Rings: The Rings of Power
+Good Omens
+The Fall of the House of Usher
+The Haunting of Bly Manor
+Carnival Row
+Cursed
+Shadowhunters
+Teen Wolf
+The Vampire Diaries
+The Originals
+Supernatural
+Star Wars: The Clone Wars
+Star Wars Rebels
+Obi-Wan Kenobi
+Ahsoka
+The Book of Boba Fett
+What If...?
+
+# --- British ---
+Downton Abbey
+Call the Midwife
+Misfits
+Skins
+The Inbetweeners
+The IT Crowd
+Peep Show
+The Thick of It
+Spaced
+Father Ted
+Blackadder
+Fawlty Towers
+Yes Minister
+Gavin & Stacey
+Derry Girls
+This Country
+Black Books
+Inside No. 9
+The League of Gentlemen
+Wolf Hall
+The Hour
+Ripper Street
+Taboo
+Jonathan Strange & Mr Norrell
+Dracula
+Prime Suspect
+Cracker
+State of Play
+Our Friends in the North
+This Life
+Sherwood
+Time
+Save Me
+Vera
+Endeavour
+Inspector Morse
+Lewis
+Midsomer Murders
+Foyle's War
+Shetland
+Happy Valley
+McMafia
+Bodies
+Black Doves
+Slow Horses
+
+# --- Korean / Japanese / other international ---
+Signal
+Stranger
+My Mister
+Misaeng
+Mr. Sunshine
+Vincenzo
+Itaewon Class
+SKY Castle
+It's Okay to Not Be Okay
+Hospital Playlist
+Move to Heaven
+D.P.
+My Liberation Notes
+Twenty-Five Twenty-One
+Extraordinary Attorney Woo
+Alchemy of Souls
+Mask Girl
+A Killer Paradox
+Moving
+Goblin
+Descendants of the Sun
+Midnight Diner: Tokyo Stories
+Romanzo Criminale
+The Bureau
+Generation War
+Trapped
+Occupied
+Ragnarok
+Bordertown
+When Heroes Fly
+Hit & Run
+Tehran
+1992
+
+# --- teen / drama / other ---
+Friday Night Lights
+The O.C.
+One Tree Hill
+Gossip Girl
+Dawson's Creek
+Veronica Mars
+Freaks and Geeks
+My So-Called Life
+Party of Five
+Beverly Hills, 90210
+Riverdale
+13 Reasons Why
+Outer Banks
+Never Have I Ever
+Atypical
+On My Block
+Cobra Kai
+The Summer I Turned Pretty
+Normal People
+This Is Us
+Parenthood
+Brothers & Sisters
+Six Feet Under
+Nashville
+Empire
+Scandal
+
+# --- round-3 supplement (toward ~500 net new) ---
+Sex and the City
+Entourage
+Flight of the Conchords
+Party Down
+Episodes
+Extras
+The Righteous Gemstones
+Vice Principals
+You're the Worst
+Catastrophe
+Nathan for You
+The Rehearsal
+How To with John Wilson
+I Think You Should Leave with Tim Robinson
+Detectorists
+Toast of London
+Flowers
+This Way Up
+The Trip
+Mum
+Motherland
+Friday Night Dinner
+Letterkenny
+Trailer Park Boys
+Workin' Moms
+Girls5eva
+Mr Inbetween
+Rake
+Please Like Me
+Kim's Convenience
+Carnivale
+Hap and Leonard
+Get Shorty
+Goliath
+Quarry
+Tulsa King
+Mayor of Kingstown
+1883
+1923
+Special Ops: Lioness
+Outer Range
+Cruel Summer
+Bosch: Legacy
+The Lincoln Lawyer
+Poker Face
+The Old Man
+Vigil
+The Capture
+Bloodlands
+Magpie Murders
+Manhunt
+Des
+A Very English Scandal
+The Pembrokeshire Murders
+The Peripheral
+The Silent Sea
+Beforeigners
+From
+Wayward Pines
+Colony
+Falling Skies
+The 100
+Pantheon
+Blue Eye Samurai
+All of Us Are Dead
+My Name
+Taxi Driver
+Flower of Evil
+Beyond Evil
+Bloodhounds
+Gyeongseong Creature
+The 8 Show
+Narco-Saints
+Paranoia Agent
+Serial Experiments Lain
+Black Lagoon
+Baccano!
+Durarara!!
+Gurren Lagann
+Fate/Zero
+Re:Zero − Starting Life in Another World
+The Promised Neverland
+Dr. Stone
+Kaguya-sama: Love Is War
+Bocchi the Rock!
+Pluto
+Columbo
+Murder, She Wrote
+Magnum, P.I.
+Miami Vice
+The Rockford Files
+Star Trek: The Original Series
+Quantum Leap
+The Wonder Years
+Northern Exposure
+Moonlighting
+L.A. Law
+thirtysomething
+China Beach
+Picket Fences
