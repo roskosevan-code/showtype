@@ -19,16 +19,18 @@ Both run over the stored scores with no API call. Sanity checks hold: The Wire's
 nearest neighbour is We Own This City (the other Simon Baltimore systems show);
 Breaking Bad's are Happy Valley / Ozark / Better Call Saul (propulsive crime).
 
-## Next — scale the catalog
+## Scaling the catalog
 
-Retrieval is only as good as the catalog is dense. Grow it with `score-all`:
+Retrieval is only as good as the catalog is dense. Two ways to grow it:
 
 ```bash
-taste-index score-all --file shows.txt --skip-existing
+taste-index score-all   --file shows.txt --skip-existing   # sequential, full price
+taste-index score-batch --file shows.txt --skip-existing   # Batches API: 50% cost, async
 ```
 
-A few hundred shows makes neighbours and profile queries genuinely useful. For
-larger runs the Claude **Batches API** (50% cost, async) is the natural optimization.
+`score-batch` submits all requests to the Claude **Batches API**, polls until the
+batch ends, then loads the results — the right tool for a few-hundred-show run.
+`scripts/catalog-shows.txt` is a starter list of ~90 shows spanning the axis space.
 
 ## Deferred
 

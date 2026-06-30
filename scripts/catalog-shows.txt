@@ -1,0 +1,109 @@
+# Catalog expansion list for `taste-index score-batch --file`.
+# ~90 well-known shows spanning the axis space, excluding the 30-show gold set.
+# One title per line; lines starting with # are ignored.
+
+# --- prestige / character drama ---
+Succession
+Mad Men
+The Leftovers
+Six Feet Under
+The Crown
+Boardwalk Empire
+Fargo
+True Detective
+Halt and Catch Fire
+Rectify
+Friday Night Lights
+Treme
+Generation Kill
+Show Me a Hero
+Band of Brothers
+The Knick
+The Deuce
+
+# --- limited / mystery ---
+Big Little Lies
+Mare of Easttown
+Sharp Objects
+The Night Of
+Watchmen
+Station Eleven
+The Terror
+Patrick Melrose
+Olive Kitteridge
+
+# --- crime / thriller ---
+Narcos
+Mindhunter
+The Killing
+Broadchurch
+Bodyguard
+The Fall
+Luther
+Sherlock
+Top of the Lake
+Bloodline
+Animal Kingdom
+Yellowstone
+Justified
+Sons of Anarchy
+Banshee
+Snowfall
+Gomorrah
+Tokyo Vice
+Your Honor
+The Night Manager
+Killing Eve
+The Sinner
+Dexter
+Hannibal
+Homeland
+Oz
+
+# --- sci-fi / fantasy / genre ---
+Battlestar Galactica
+Westworld
+Black Mirror
+Stranger Things
+The Mandalorian
+Dark
+Devs
+Raised by Wolves
+The Witcher
+House of the Dragon
+His Dark Materials
+The Boys
+Counterpart
+Fallout
+3 Body Problem
+Lost
+Fringe
+Black Sails
+Vikings
+The Last of Us
+
+# --- comedy-drama / auteur ---
+The Bear
+Atlanta
+Barry
+Fleabag
+Better Things
+Reservation Dogs
+Beef
+BoJack Horseman
+Russian Doll
+Veep
+Curb Your Enthusiasm
+Ted Lasso
+Hacks
+The Marvelous Mrs. Maisel
+
+# --- international ---
+Money Heist
+Borgen
+Squid Game
+Pachinko
+My Brilliant Friend
+Tehran
+Lupin
+1899

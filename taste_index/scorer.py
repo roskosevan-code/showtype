@@ -46,6 +46,50 @@ not institutional sweep; a stylized show can still be high on verisimilitude; hi
 register is only "corny" when paired with low verisimilitude."""
 
 
+# Structured-output JSON schema for a ShowScores object. Written by hand (rather
+# than ShowScores.model_json_schema()) so it carries no numeric constraints, which
+# the output_config.format API rejects. Range 0-10 is enforced by Pydantic after.
+SHOW_SCORES_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["show", "scores"],
+    "properties": {
+        "show": {"type": "string"},
+        "scores": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["axis", "value", "confidence", "justification"],
+                "properties": {
+                    "axis": {"type": "string"},
+                    "value": {"type": "integer"},
+                    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+                    "justification": {"type": "string"},
+                },
+            },
+        },
+    },
+}
+
+_SYSTEM_INSTRUCTION = (
+    "You are scoring TV shows for The Taste Index. Read this rubric in full — the "
+    "eight axis definitions, the scoring conventions, the calibration anchors, and "
+    "the worked examples — then score shows strictly from it.\n\n"
+)
+
+
+def _system_blocks(rubric_text: str) -> list[dict]:
+    # Cache the rubric prefix so batch/sequential scoring of many shows reuses it.
+    return [
+        {
+            "type": "text",
+            "text": _SYSTEM_INSTRUCTION + rubric_text,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
+
+
 def _user_prompt(title: str, axis_names: list[str]) -> str:
     axis_list = ", ".join(axis_names)
     return (
@@ -75,19 +119,7 @@ def score_show(
         model=model,
         max_tokens=4096,
         thinking={"type": "adaptive"},
-        system=[
-            {
-                "type": "text",
-                "text": (
-                    "You are scoring TV shows for The Taste Index. Read this rubric "
-                    "in full — the eight axis definitions, the scoring conventions, "
-                    "the calibration anchors, and the worked examples — then score "
-                    "shows strictly from it.\n\n" + rubric_text
-                ),
-                # Cache the rubric so batch-scoring many shows reuses the prefix.
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
+        system=_system_blocks(rubric_text),
         messages=[{"role": "user", "content": _user_prompt(title, axis_names)}],
         output_format=ShowScores,
     )
@@ -98,3 +130,25 @@ def score_show(
             f"{response.stop_reason})"
         )
     return parsed
+
+
+def build_batch_params(
+    title: str, rubric_text: str, axis_names: list[str], model: str = MODEL
+) -> dict:
+    """Params for one Batches-API request that scores `title`."""
+    return {
+        "model": model,
+        "max_tokens": 4096,
+        "thinking": {"type": "adaptive"},
+        "system": _system_blocks(rubric_text),
+        "messages": [{"role": "user", "content": _user_prompt(title, axis_names)}],
+        "output_config": {"format": {"type": "json_schema", "schema": SHOW_SCORES_SCHEMA}},
+    }
+
+
+def parse_message_scores(message) -> ShowScores:
+    """Extract a validated ShowScores from a (possibly thinking-prefixed) message."""
+    text = next((b.text for b in message.content if b.type == "text"), None)
+    if text is None:
+        raise RuntimeError(f"no text block in message (stop_reason={message.stop_reason})")
+    return ShowScores.model_validate_json(text)
