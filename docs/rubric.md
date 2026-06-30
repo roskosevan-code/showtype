@@ -63,10 +63,11 @@ How much the show asks of the viewer per minute — its willingness to withhold 
 ### 8. Register (Tonal Control)
 Where the show sits on the **restrained ↔ operatic** spectrum of *tonal and emotional pitch* — how heightened the performances, dialogue, music, and dramatic stakes are played. Descriptive, not a quality judgment.
 - **This is tonal pitch, not visual boldness.** Stylized design, bold framing, and formal tricks belong to **Authorial Signature** (axis 5), not here. A show can have a loud, unmistakable authorial hand and still be tonally restrained — score the emotional key, not the production design. *Severance* is the test case: its symmetrical, retro-modern design is maximalist (high Authorial Signature), yet its performances and tone are deliberately muted and deadpan (low register, ~3–4).
-- **Low (0–2):** restrained, naturalistic, understated, deadpan; emotions played cool and stakes underplayed.
+- **Not intensity or stakes.** How *high* the stakes are is not register; how *loudly they are played* is. A violent, tense show shot in flat naturalism — cool performances, no swelling score, no melodramatic heightening — is **low** register despite life-or-death content (*We Own This City*, *Top Boy* ~3). Heightening lives in operatic performance, music, and melodrama, not in subject matter. Don't read grit, danger, or seriousness as register.
+- **Low (0–2):** restrained, naturalistic, understated, deadpan; emotions played cool and the pitch flat even when stakes are high.
 - **High (8–10):** operatic, heightened, maximalist, melodramatic; emotions and stakes pitched loud.
 - **Note on "corny":** a high-register show is not automatically corny. "Corny" typically means **high register *combined with* low verisimilitude** — heightened style that hasn't been earned. High register with high verisimilitude can be superb (*Deadwood*). Whether the register is executed with command is a quality matter handled outside this number.
-- Anchors: *Chernobyl* 3 / *The Americans* 3 (restrained, controlled); *Deadwood* 8 (Shakespearean and operatic, but earned); *Peaky Blinders* 9 (operatic swagger).
+- Anchors: *The Wire* 2 / *We Own This City* 3 / *Top Boy* 3 (grounded street realism played flat, high stakes notwithstanding); *Chernobyl* 3 / *The Americans* 3 (restrained, controlled); *Deadwood* 8 (Shakespearean and operatic, but earned); *Peaky Blinders* 9 (operatic swagger).
 
 ## Calibration anchor table
 
