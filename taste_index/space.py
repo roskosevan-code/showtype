@@ -124,20 +124,37 @@ def recommend(
     liked: list[str],
     n: int = 10,
     allowed: set[str] | None = None,
-) -> tuple[list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
-    """Recommend from a taste profile = centroid of the liked shows' vectors.
+    disliked: list[str] | None = None,
+    beta: float = 0.5,
+) -> tuple[list[str], list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
+    """Recommend from a taste profile, optionally pushed away from disliked shows.
 
-    Returns (recognised liked titles, centroid vector, recommendations).
-    `allowed`, if given, restricts recommendations to those titles (e.g. one genre).
+    The query point is the liked-shows centroid, shifted away from the disliked
+    centroid (Rocchio-style relevance feedback): target = C_like + beta*(C_like - C_dislike),
+    clamped to [0, 10]. With no dislikes this is just the liked centroid.
+
+    Returns (recognised liked, recognised disliked, query vector, recommendations).
     """
     axis_ids, _ = axis_index(conn)
     vecs = show_vectors(conn)
     present = [t for t in liked if t in vecs and _complete(vecs[t], axis_ids)]
     if not present:
         raise ValueError("none of the liked shows are in the DB")
-    centroid = {i: sum(vecs[t][i] for t in present) / len(present) for i in axis_ids}
-    recs = nearest_to_vector(conn, centroid, n, exclude=set(liked), allowed=allowed)
-    return present, centroid, recs
+    neg = [t for t in (disliked or []) if t in vecs and _complete(vecs[t], axis_ids)]
+
+    c_like = {i: sum(vecs[t][i] for t in present) / len(present) for i in axis_ids}
+    if neg:
+        c_dis = {i: sum(vecs[t][i] for t in neg) / len(neg) for i in axis_ids}
+        target = {
+            i: min(10.0, max(0.0, c_like[i] + beta * (c_like[i] - c_dis[i])))
+            for i in axis_ids
+        }
+    else:
+        target = c_like
+
+    exclude = set(liked) | set(disliked or [])
+    recs = nearest_to_vector(conn, target, n, exclude=exclude, allowed=allowed)
+    return present, neg, target, recs
 
 
 def parse_constraint(expr: str, conn: sqlite3.Connection) -> tuple[int, str, int]:

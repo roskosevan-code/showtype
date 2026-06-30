@@ -46,10 +46,14 @@ the 5–8 of the sparse 30-show space.
 
 ## Done — recommendation engine + web UI
 
-- `space.recommend(liked, n)`: a **taste profile** is the centroid of the liked shows'
-  vectors; recommendations are the nearest shows to that centroid (excluding the inputs).
+- `space.recommend(liked, n, disliked=...)`: a **taste profile** is the centroid of the
+  liked shows' vectors; recommendations are the nearest shows to it (excluding the inputs).
   Liking The Wire + Chernobyl + The Americans surfaces the David Simon canon
   (The Deuce, Show Me a Hero, We Own This City, Generation Kill) purely from axis geometry.
+  **Disliked shows** push the query point away from their centroid (Rocchio relevance
+  feedback: `target = C_like + 0.5*(C_like - C_dislike)`, clamped to [0,10]) — liking
+  The Expanse + BSG but disliking Black Mirror shifts the recs toward bigger, grounded
+  systems shows (Andor, ZeroZeroZero, Chernobyl).
 - `taste_index/web.py` + `taste-index serve`: a zero-dependency web UI (stdlib
   `http.server`) — explore a show's axis profile and nearest neighbours, and recommend
   from shows you like. JSON API at `/api/meta`, `/api/show`, `/api/similar`, `/api/recommend`.

@@ -74,7 +74,9 @@ python -m taste_index serve                                            # web UI 
 
 The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
 nearest neighbours and recommends from a taste profile (the centroid of shows you like —
-e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon).
+e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon). You can
+also add **shows you don't like**: the query point is pushed away from their centroid
+(Rocchio-style), so the recommendations shift in the opposite direction.
 
 **Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is
 primary) are categorical metadata — the axes are *structural*, so they don't encode

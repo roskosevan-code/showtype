@@ -72,14 +72,17 @@ def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> d
     }
 
 
-def _recommend(conn, liked: list[str], n: int, genre: str | None) -> dict:
+def _recommend(conn, liked: list[str], n: int, genre: str | None, disliked: list[str]) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
     allowed = db.shows_with_genre(conn, genre) if genre else None
-    present, centroid, recs = space.recommend(conn, liked, n=n, allowed=allowed)
+    present, neg, target, recs = space.recommend(
+        conn, liked, n=n, allowed=allowed, disliked=disliked
+    )
     return {
         "liked": present,
-        "centroid": [round(centroid[i], 1) for i in axis_ids],
+        "disliked": neg,
+        "centroid": [round(target[i], 1) for i in axis_ids],
         "recommendations": _neighbor_list(recs, axis_ids, gmulti),
     }
 
@@ -119,9 +122,10 @@ class _Handler(BaseHTTPRequestHandler):
                 return self._json(_similar(conn, q.get("title", [""])[0], n, genre, same))
             if u.path == "/api/recommend":
                 liked = [s for s in q.get("like", [""])[0].split("|") if s]
+                disliked = [s for s in q.get("dislike", [""])[0].split("|") if s]
                 n = int(q.get("n", ["12"])[0])
                 genre = q.get("genre", [""])[0] or None
-                return self._json(_recommend(conn, liked, n, genre))
+                return self._json(_recommend(conn, liked, n, genre, disliked))
             return self._json({"error": "not found"}, 404)
         except (KeyError, ValueError) as e:
             return self._json({"error": str(e)}, 400)
@@ -191,15 +195,17 @@ PAGE = """<!doctype html>
   </section>
   <section class="card">
     <h2>Recommend from shows you like</h2>
-    <div class="row"><input id="likeInput" type="text" list="shows" placeholder="Add a show you like&hellip;" autocomplete="off"><button id="addLike">Add</button></div>
+    <div class="row"><input id="likeInput" type="text" list="shows" placeholder="Add a show you like&hellip;" autocomplete="off"><button id="addLike">+ Like</button></div>
     <div id="chips" class="chips"></div>
+    <div class="row"><input id="dislikeInput" type="text" list="shows" placeholder="Add a show you don&rsquo;t like&hellip;" autocomplete="off"><button id="addDislike" class="ghost">&minus; Dislike</button></div>
+    <div id="dchips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
     <div id="recs"></div>
   </section>
 </div>
 <script>
 let AXES=[], GENRES=[];
-const liked=[];
+const liked=[], disliked=[];
 const $=s=>document.querySelector(s);
 const j=async u=>{const r=await fetch(u);return r.json();};
 
@@ -229,29 +235,34 @@ async function loadShow(title){
   $('#profile').innerHTML=html;
 }
 
+const chipHtml=(arr,list)=>arr.map((t,i)=>`<span class="chip">${t}<b data-list="${list}" data-i="${i}">&times;</b></span>`).join('');
 function renderChips(){
-  $('#chips').innerHTML=liked.map((t,i)=>`<span class="chip">${t}<b data-i="${i}">&times;</b></span>`).join('')||'<span class="dist">No shows added yet.</span>';
+  $('#chips').innerHTML=chipHtml(liked,'like')||'<span class="dist">No likes yet.</span>';
+  $('#dchips').innerHTML=chipHtml(disliked,'dislike');
 }
 async function recommend(){
-  if(!liked.length){ $('#recs').innerHTML='<div class="dist">Add a few shows first.</div>'; return; }
+  if(!liked.length){ $('#recs').innerHTML='<div class="dist">Add a few shows you like first.</div>'; return; }
   const g=$('#recGenre').value;
   const gp=g?'&genre='+encodeURIComponent(g):'';
-  const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp);
+  const dp=disliked.length?'&dislike='+disliked.map(encodeURIComponent).join('|'):'';
+  const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp+dp);
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  const head=g?`Recommended &middot; ${g}`:'Recommended';
+  let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' disliked';
   $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations);
 }
 
 document.addEventListener('click',e=>{
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); }
-  const x=e.target.closest('.chip b'); if(x){ liked.splice(+x.dataset.i,1); renderChips(); }
+  const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
 $('#addLike').addEventListener('click',()=>{ const v=$('#likeInput').value.trim(); if(v&&!liked.includes(v)){ liked.push(v); renderChips(); } $('#likeInput').value=''; });
 $('#likeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addLike').click(); });
+$('#addDislike').addEventListener('click',()=>{ const v=$('#dislikeInput').value.trim(); if(v&&!disliked.includes(v)){ disliked.push(v); renderChips(); } $('#dislikeInput').value=''; });
+$('#dislikeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addDislike').click(); });
 $('#recBtn').addEventListener('click',recommend);
-$('#clearBtn').addEventListener('click',()=>{ liked.length=0; renderChips(); $('#recs').innerHTML=''; });
+$('#clearBtn').addEventListener('click',()=>{ liked.length=0; disliked.length=0; renderChips(); $('#recs').innerHTML=''; });
 
 (async()=>{
   const m=await j('/api/meta');
