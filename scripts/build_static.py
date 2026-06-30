@@ -180,6 +180,7 @@ def ensure_db(conn) -> None:
     cli.cmd_init_db(ns(db=str(DB), rubric=str(REPO / "docs/rubric.md")))
     cli.cmd_backfill(ns(db=str(DB), csv=str(REPO / "docs/catalog-scores.csv")))
     cli.cmd_tag_genres(ns(db=str(DB), csv=str(REPO / "docs/genres.csv")))
+    cli.cmd_load_quality(ns(db=str(DB), csv=str(REPO / "docs/quality.csv")))
 
 
 def main() -> int:

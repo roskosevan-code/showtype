@@ -96,6 +96,13 @@ Comedy. Multi-genre means a show appears under each of its genres — Barry (Com
 shows up in both filters. The UI exposes "same genre only" (explore) and a genre dropdown
 (recommend).
 
+**Quality layer** (`docs/quality.csv` → `show.quality`/`summary`/`episodes`/`seasons`,
+loaded with `load-quality`). The axes are *descriptive*; the rubric keeps quality separate,
+so this is a **model-judged execution score (0–10, evaluative)** plus a one-line reason, a
+spoiler-free summary, and approximate episode/season counts (model estimates — `≈`, null
+when unsure). The UI shows a `Q8` badge on every row, a summary + execution block in the
+profile, and a "sort by quality" toggle on recommendations.
+
 **Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
 for provenance). `docs/baseline-scores.csv` is the **active diff reference** — the gold
 set re-scored by the model under the *current* rubric, regenerated with
@@ -121,14 +128,17 @@ docs/
   phase0-scores.md              # (generated) Phase 0 per-show tables + Flags
   phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
-  catalog-scores.csv            # (generated) 231-show catalog for retrieval; load with `backfill --csv`
-  genres.csv                    # (curated) show,genre,rank — primary + secondary genres; load with `tag-genres`
+  catalog-scores.csv            # (generated) 753-show catalog for retrieval; load with `backfill --csv`
+  genres.csv                    # show,genre,rank — curated (231) + model-classified; load with `tag-genres`
+  quality.csv                   # (generated) model-judged quality + summary + episodes; load with `load-quality`
   taste-index.html              # (generated) self-contained offline UI; open in any browser
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
   gen_genres.py                 # Author/validate docs/genres.csv (genre buckets -> flat CSV)
   build_static.py               # Bake the catalog into a self-contained docs/taste-index.html
+  classify_genres.py            # Batches-API genre classifier for bulk-added shows
+  build_quality.py              # Batches-API quality/summary/episode pass -> docs/quality.csv
 taste_index/                    # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
   schema.sql                    # axis / show / score tables

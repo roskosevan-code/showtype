@@ -450,6 +450,8 @@ def cmd_serve(args: argparse.Namespace) -> int:
             cmd_backfill(argparse.Namespace(db=args.db, csv=DEFAULT_CATALOG_CSV))
         if os.path.exists(DEFAULT_GENRES_CSV):
             cmd_tag_genres(argparse.Namespace(db=args.db, csv=DEFAULT_GENRES_CSV))
+        if os.path.exists(DEFAULT_QUALITY_CSV):
+            cmd_load_quality(argparse.Namespace(db=args.db, csv=DEFAULT_QUALITY_CSV))
 
     web.serve(db_path=args.db, host=args.host, port=args.port)
     return 0
