@@ -76,6 +76,10 @@ python -m taste_index serve                                            # web UI 
 committed CSVs on first run — so from a fresh clone it's a single command, no API key and
 no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
 
+**No Python at all?** `docs/taste-index.html` is a single self-contained file (all 231
+shows baked in; similarity/recommendation/filter reimplemented in client-side JS) — just
+open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
+
 The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
 nearest neighbours and recommends from a taste profile (the centroid of shows you like —
 e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon). You can
@@ -119,10 +123,12 @@ docs/
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
   catalog-scores.csv            # (generated) 231-show catalog for retrieval; load with `backfill --csv`
   genres.csv                    # (curated) show,genre,rank — primary + secondary genres; load with `tag-genres`
+  taste-index.html              # (generated) self-contained offline UI; open in any browser
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
   gen_genres.py                 # Author/validate docs/genres.csv (genre buckets -> flat CSV)
+  build_static.py               # Bake the catalog into a self-contained docs/taste-index.html
 taste_index/                    # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
   schema.sql                    # axis / show / score tables
