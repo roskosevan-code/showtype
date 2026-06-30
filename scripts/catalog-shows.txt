@@ -1,6 +1,7 @@
 # Catalog expansion list for `taste-index score-batch --file`.
-# ~90 well-known shows spanning the axis space, excluding the 30-show gold set.
+# 94 well-known shows spanning the axis space, excluding the 30-show gold set.
 # One title per line; lines starting with # are ignored.
+# Scored results (with the gold set) live in docs/catalog-scores.csv.
 
 # --- prestige / character drama ---
 Succession

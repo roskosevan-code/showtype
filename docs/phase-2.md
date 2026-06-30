@@ -32,6 +32,18 @@ taste-index score-batch --file shows.txt --skip-existing   # Batches API: 50% co
 batch ends, then loads the results — the right tool for a few-hundred-show run.
 `scripts/catalog-shows.txt` is a starter list of ~90 shows spanning the axis space.
 
+**Done — 124-show catalog.** The starter list was scored via `score-batch` (94/94
+succeeded) and the full catalog is committed at `docs/catalog-scores.csv`
+(124 shows). Load it without re-spending:
+
+```bash
+taste-index init-db && taste-index backfill --csv docs/catalog-scores.csv
+taste-index similar "The Bear" -n 6
+```
+
+At this density, nearest-neighbour distances tighten to ~2.8–4 (real matches) from
+the 5–8 of the sparse 30-show space.
+
 ## Deferred
 
 - **Quality layer** — the rubric notes axes are descriptive and "quality is tracked
