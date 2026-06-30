@@ -44,6 +44,16 @@ taste-index similar "The Bear" -n 6
 At this density, nearest-neighbour distances tighten to ~2.8–4 (real matches) from
 the 5–8 of the sparse 30-show space.
 
+## Done — recommendation engine + web UI
+
+- `space.recommend(liked, n)`: a **taste profile** is the centroid of the liked shows'
+  vectors; recommendations are the nearest shows to that centroid (excluding the inputs).
+  Liking The Wire + Chernobyl + The Americans surfaces the David Simon canon
+  (The Deuce, Show Me a Hero, We Own This City, Generation Kill) purely from axis geometry.
+- `taste_index/web.py` + `taste-index serve`: a zero-dependency web UI (stdlib
+  `http.server`) — explore a show's axis profile and nearest neighbours, and recommend
+  from shows you like. JSON API at `/api/meta`, `/api/show`, `/api/similar`, `/api/recommend`.
+
 ## Deferred
 
 - **Quality layer** — the rubric notes axes are descriptive and "quality is tracked

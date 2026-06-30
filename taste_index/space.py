@@ -93,6 +93,40 @@ def nearest(
     return scored[:n]
 
 
+def nearest_to_vector(
+    conn: sqlite3.Connection,
+    target: dict[int, float],
+    n: int,
+    exclude: set[str],
+) -> list[tuple[str, float, dict[int, int]]]:
+    """Shows nearest to an arbitrary target vector, excluding `exclude` titles."""
+    axis_ids, _ = axis_index(conn)
+    scored = [
+        (t, math.sqrt(sum((target[i] - v[i]) ** 2 for i in axis_ids)), v)
+        for t, v in show_vectors(conn).items()
+        if t not in exclude and _complete(v, axis_ids)
+    ]
+    scored.sort(key=lambda x: x[1])
+    return scored[:n]
+
+
+def recommend(
+    conn: sqlite3.Connection, liked: list[str], n: int = 10
+) -> tuple[list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
+    """Recommend from a taste profile = centroid of the liked shows' vectors.
+
+    Returns (recognised liked titles, centroid vector, recommendations).
+    """
+    axis_ids, _ = axis_index(conn)
+    vecs = show_vectors(conn)
+    present = [t for t in liked if t in vecs and _complete(vecs[t], axis_ids)]
+    if not present:
+        raise ValueError("none of the liked shows are in the DB")
+    centroid = {i: sum(vecs[t][i] for t in present) / len(present) for i in axis_ids}
+    recs = nearest_to_vector(conn, centroid, n, exclude=set(liked))
+    return present, centroid, recs
+
+
 def parse_constraint(expr: str, conn: sqlite3.Connection) -> tuple[int, str, int]:
     """Parse 'sweep>=8' -> (axis_id, op, value)."""
     for op in _OPS:  # dicts preserve insertion order; longest ops first

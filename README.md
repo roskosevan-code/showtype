@@ -68,7 +68,12 @@ python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the
 # Phase 2 — retrieval over the 8-axis space (no API calls):
 python -m taste_index similar "The Wire" -n 5                          # nearest shows in taste-space
 python -m taste_index query --where "sweep>=8" --where "register<=4"   # filter by axis profile
+python -m taste_index serve                                            # web UI at http://127.0.0.1:8000
 ```
+
+The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
+nearest neighbours and recommends from a taste profile (the centroid of shows you like —
+e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon).
 
 **Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
 for provenance). `docs/baseline-scores.csv` is the **active diff reference** — the gold
@@ -104,7 +109,8 @@ taste_index/                    # Phase 1 package
   schema.sql                    # axis / show / score tables
   db.py                         # SQLite access layer
   scorer.py                     # Claude-API scorer (structured outputs)
-  space.py                      # taste-space retrieval: k-NN + profile query
-  cli.py                        # init-db / axes / backfill / score / score-all / diff / show / similar / query
+  space.py                      # taste-space retrieval: k-NN, profile query, recommend (centroid)
+  web.py                        # zero-dependency web UI (http.server) + JSON API
+  cli.py                        # init-db / backfill / score* / diff / similar / query / serve / show
 pyproject.toml                  # package metadata + deps (anthropic, pydantic)
 ```

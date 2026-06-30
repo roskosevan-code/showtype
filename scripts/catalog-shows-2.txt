@@ -1,0 +1,124 @@
+# Catalog expansion, round 2 — for `taste-index score-batch --file`.
+# ~100 more well-known shows, none overlapping the existing 124-show catalog.
+# One title per line; lines starting with # are ignored.
+
+# --- classic / older prestige & drama ---
+Twin Peaks
+The X-Files
+Homicide: Life on the Street
+NYPD Blue
+Hill Street Blues
+St. Elsewhere
+ER
+The Good Wife
+The Good Fight
+Damages
+House
+Alias
+Veronica Mars
+Buffy the Vampire Slayer
+Angel
+Gilmore Girls
+The Twilight Zone
+
+# --- comedy ---
+The Office
+The Office (UK)
+Parks and Recreation
+30 Rock
+Community
+Arrested Development
+Seinfeld
+Cheers
+Frasier
+The Larry Sanders Show
+It's Always Sunny in Philadelphia
+Silicon Valley
+Eastbound & Down
+Girls
+Master of None
+What We Do in the Shadows
+Schitt's Creek
+Brooklyn Nine-Nine
+The Good Place
+Abbott Elementary
+PEN15
+Search Party
+
+# --- crime / thriller ---
+The Bridge (Bron/Broen)
+The Tunnel
+Unforgotten
+The Responder
+Giri/Haji
+Marcella
+Collateral
+Patriot
+Sneaky Pete
+Berlin Station
+Spiral (Engrenages)
+Billions
+Industry
+Ray Donovan
+Power
+Bosch
+Reacher
+The Plot Against America
+
+# --- sci-fi / fantasy / genre ---
+Star Trek: The Next Generation
+Star Trek: Deep Space Nine
+Firefly
+Farscape
+Stargate SG-1
+Doctor Who
+The Umbrella Academy
+The OA
+Sense8
+Altered Carbon
+Snowpiercer
+American Gods
+Penny Dreadful
+The Haunting of Hill House
+Midnight Mass
+WandaVision
+Loki
+The Wheel of Time
+Outlander
+Wednesday
+Maniac
+Tales from the Loop
+Years and Years
+Shogun
+Lost in Space
+
+# --- network / broadcast drama ---
+This Is Us
+The Handmaid's Tale
+Orange Is the New Black
+House of Cards
+The Newsroom
+Vinyl
+Lovecraft Country
+Perry Mason
+Tom Clancy's Jack Ryan
+
+# --- international ---
+Deutschland 83
+Forbrydelsen (The Killing)
+Wallander
+The Returned (Les Revenants)
+Call My Agent
+Kingdom
+The Glory
+Hellbound
+Crash Landing on You
+Reply 1988
+The Young Pope
+Suburra
+Narcos: Mexico
+
+# --- recent notable ---
+Sex Education
+The End of the Fxxking World
+Normal People

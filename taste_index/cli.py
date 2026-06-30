@@ -389,6 +389,13 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    from . import web
+
+    web.serve(db_path=args.db, host=args.host, port=args.port)
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     rows = db.get_show_scores(conn, args.title)
@@ -459,6 +466,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="axis constraint, e.g. 'sweep>=8' or 'register<=4' (repeatable)",
     )
     sp.set_defaults(func=cmd_query)
+
+    sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps)")
+    sp.add_argument("--host", default="127.0.0.1")
+    sp.add_argument("--port", type=int, default=8000)
+    sp.set_defaults(func=cmd_serve)
 
     sp = sub.add_parser("show", help="print stored scores for a show")
     sp.add_argument("title")
