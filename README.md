@@ -49,6 +49,7 @@ python -m taste_index backfill        # load the baseline scores (docs/baseline-
 
 export ANTHROPIC_API_KEY=sk-ant-...   # required for scoring
 python -m taste_index score "The Wire"   # score one show via the Claude API, store the result
+python -m taste_index score-all "Succession" "Mad Men" --skip-existing   # batch-score new shows
 python -m taste_index show "The Wire"    # print stored scores for a show
 python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the stored baseline (no save)
 ```
