@@ -26,7 +26,16 @@ anchors, and worked examples live in [`docs/rubric.md`](docs/rubric.md).
 **Phase 0 — Rubric sanity check.** A validation spike to confirm the rubric produces
 sane, useful axis scores by hand, before any pipeline is built. The procedure and exit
 criteria are in [`docs/phase-0-claude-code-task.md`](docs/phase-0-claude-code-task.md).
-Output of the spike will land in `docs/phase0-scores.md` and `docs/phase0-scores.csv`.
+
+The spike has been **run once** over the 30-show starter gold set:
+[`docs/phase0-scores.md`](docs/phase0-scores.md) (per-show tables + Flags) and
+[`docs/phase0-scores.csv`](docs/phase0-scores.csv) (240 rows). All 14 calibration-anchor
+shows reproduce the rubric's anchor table exactly. Both files are regenerated from a
+single source of truth, [`scripts/gen_phase0.py`](scripts/gen_phase0.py), so the table
+and CSV never drift — edit the scores there and re-run `python3 scripts/gen_phase0.py`.
+
+**Next:** review the output against your own read of these shows (the gate). If it holds
+up, proceed to Phase 1.
 
 If the scores are largely sane and justifications concrete, proceed to **Phase 1**:
 seed an `Axis` table from `docs/rubric.md` and begin building the scoring pipeline. If
@@ -39,6 +48,8 @@ specific axes are consistently wrong, revise the axis definitions and anchors in
 docs/
   rubric.md                     # The scoring rubric (v1) — the reference + Phase 1 seed
   phase-0-claude-code-task.md   # Phase 0 spike: procedure, gold-set, exit criteria
-  phase0-scores.md              # (generated) Phase 0 hand-review output
-  phase0-scores.csv             # (generated) Phase 0 scores, tabular
+  phase0-scores.md              # (generated) Phase 0 per-show tables + Flags
+  phase0-scores.csv             # (generated) Phase 0 scores, 240 rows
+scripts/
+  gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
 ```
