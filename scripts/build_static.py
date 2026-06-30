@@ -35,21 +35,30 @@ const showsWithGenre=g=>TITLES.filter(t=>genresOf(t).includes(g));
 const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.length);
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
-function rowItem(title,genres,tail){
-  return `<li><span><button class="lk" data-t="${encodeURIComponent(title)}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${tail||''}</span></li>`;
+function whyText(v,ref){
+  const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
+  const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
+  const far=d.slice().sort((a,b)=>b.gap-a.gap)[0];
+  let s='Aligns on <b>'+near.join('</b>, <b>')+'</b>';
+  if(far.gap>=3) s+=' &middot; differs on <b>'+far.n+'</b> ('+far.v+' vs ~'+far.r+')';
+  return s;
+}
+function rowItem(title,genres,tail,why){
+  const e=encodeURIComponent(title);
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
 }
 
 function bars(values){
   return '<div class="axes">'+AXES.map((a,i)=>{const v=values[i];
     return `<div class="ax"><span class="lbl">${a.name}</span><span class="bar"><span style="width:${v*10}%"></span></span><span class="v">${v}</span></div>`;}).join('')+'</div>';
 }
-function neighborList(items){
+function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`)).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
 }
 function nearestTo(vec,n,exclude,allowed){
   return TITLES.filter(t=>!exclude.has(t)&&(!allowed||allowed.has(t)))
-    .map(t=>({title:t,distance:+dist(vec,SHOWS[t].values).toFixed(2),genres:genresOf(t)}))
+    .map(t=>({title:t,distance:+dist(vec,SHOWS[t].values).toFixed(2),genres:genresOf(t),values:SHOWS[t].values}))
     .sort((a,b)=>a.distance-b.distance).slice(0,n);
 }
 function loadShow(title){
@@ -61,7 +70,7 @@ function loadShow(title){
   const neighbors=nearestTo(s.values,8,new Set([title]),allowed);
   let html=`<div style="margin:8px 0 2px">${gbadges(s.genres)}</div>`+bars(s.values);
   html+=s.scores.map(x=>`<div class="just"><b>${x.axis} ${x.value}</b> &middot; ${x.justification} <i>(${x.confidence})</i></div>`).join('');
-  html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(neighbors);
+  html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(neighbors,s.values);
   $('#profile').innerHTML=html;
 }
 
@@ -81,7 +90,7 @@ function recommend(){
   const allowed=g?new Set(showsWithGenre(g)):null;
   const recs=nearestTo(target,12,new Set([...liked,...disliked]),allowed);
   let head='Recommended'; if(g) head+=' &middot; '+g; if(neg.length) head+=' &middot; away from '+neg.length+' disliked';
-  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs);
+  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs,target);
 }
 
 function buildFilters(){
@@ -111,6 +120,7 @@ function addPref(title,kind){
   if(liked.length) recommend();
 }
 document.addEventListener('click',e=>{
+  const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
   const a=e.target.closest('.act'); if(a){ addPref(decodeURIComponent(a.dataset.t),a.dataset.act); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
   const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); if(liked.length&&$('#recs').innerHTML) recommend(); }

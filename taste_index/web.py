@@ -191,8 +191,11 @@ PAGE = """<!doctype html>
   .ax .v { text-align:right; font-variant-numeric:tabular-nums; color:var(--ink); }
   .just { color:var(--mut); font-size:12.5px; margin:2px 0 10px 130px; }
   ul.list { list-style:none; margin:0; padding:0; }
-  ul.list li { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); }
+  ul.list li { padding:7px 0; border-bottom:1px solid var(--line); }
   ul.list li:last-child { border-bottom:0; }
+  .nrow { display:flex; justify-content:space-between; align-items:center; }
+  .why { color:var(--mut); font-size:12.5px; margin:5px 0 2px; }
+  .why b { color:var(--ink); font-weight:600; }
   .lk { background:none; border:0; color:var(--acc); cursor:pointer; padding:0; font:inherit; text-align:left; }
   .dist { color:var(--mut); font-variant-numeric:tabular-nums; font-size:12.5px; }
   .badge { background:#0f0d0b; border:1px solid var(--line); color:var(--mut); border-radius:5px; padding:1px 7px; font-size:11.5px; margin-left:8px; }
@@ -252,12 +255,21 @@ function bars(values){
 }
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const actBtns=t=>{const e=encodeURIComponent(t);return `<button class="act${liked.includes(t)?' lk-on':''}" data-act="like" data-t="${e}" title="Add to likes">+</button><button class="act${disliked.includes(t)?' lk-on':''}" data-act="dislike" data-t="${e}" title="Add to dislikes">&minus;</button>`;};
-function rowItem(title,genres,tail){
-  return `<li><span><button class="lk" data-t="${encodeURIComponent(title)}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${tail||''}</span></li>`;
+function whyText(v,ref){
+  const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
+  const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
+  const far=d.slice().sort((a,b)=>b.gap-a.gap)[0];
+  let s='Aligns on <b>'+near.join('</b>, <b>')+'</b>';
+  if(far.gap>=3) s+=' &middot; differs on <b>'+far.n+'</b> ('+far.v+' vs ~'+far.r+')';
+  return s;
 }
-function neighborList(items){
+function rowItem(title,genres,tail,why){
+  const e=encodeURIComponent(title);
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}</span><span class="racts">${actBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
+}
+function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`)).join('')+'</ul>';
+  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
 }
 
 async function loadShow(title){
@@ -268,7 +280,7 @@ async function loadShow(title){
   const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
   let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}</div>`+bars(d.scores.map(s=>s.value));
   html+=d.scores.map(s=>`<div class="just"><b>${s.axis} ${s.value}</b> &middot; ${s.justification} <i>(${s.confidence})</i></div>`).join('');
-  html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(sim.neighbors);
+  html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(sim.neighbors, sim.values);
   $('#profile').innerHTML=html;
 }
 
@@ -312,7 +324,7 @@ async function recommend(){
   const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp+dp);
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' disliked';
-  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations);
+  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations, d.centroid);
 }
 
 function addPref(title,kind){
@@ -324,6 +336,7 @@ function addPref(title,kind){
   if(liked.length) recommend();
 }
 document.addEventListener('click',e=>{
+  const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
   const a=e.target.closest('.act'); if(a){ addPref(decodeURIComponent(a.dataset.t),a.dataset.act); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
   const x=e.target.closest('.chip b'); if(x){ (x.dataset.list==='dislike'?disliked:liked).splice(+x.dataset.i,1); renderChips(); if(liked.length&&$('#recs').innerHTML) recommend(); }
