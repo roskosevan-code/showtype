@@ -45,13 +45,20 @@ API (Claude Opus 4.8, adaptive thinking, structured outputs). See **Usage** belo
 pip install -e .                      # installs anthropic + pydantic
 python -m taste_index init-db         # create taste_index.db, seed the 8 axes from docs/rubric.md
 python -m taste_index axes            # list the seeded axes
-python -m taste_index backfill        # load the 30 Phase 0 hand-scores from docs/phase0-scores.csv
+python -m taste_index backfill        # load the baseline scores (docs/baseline-scores.csv) into the DB
 
 export ANTHROPIC_API_KEY=sk-ant-...   # required for scoring
 python -m taste_index score "The Wire"   # score one show via the Claude API, store the result
 python -m taste_index show "The Wire"    # print stored scores for a show
 python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the stored baseline (no save)
 ```
+
+**Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
+for provenance). `docs/baseline-scores.csv` is the **active diff reference** — the gold
+set re-scored by the model under the *current* rubric, regenerated with
+`python scripts/refresh_baseline.py` after the rubric changes. `backfill` loads it, and
+`diff` compares fresh live scores against it. The current baseline agrees with the
+original hand-scores 96% within one point with no systematic skew.
 
 The rubric is the single source of truth: the eight axes are seeded into the `axis`
 table and the full rubric text is handed to the scorer as context. Revise
@@ -69,9 +76,11 @@ docs/
   rubric.md                     # The scoring rubric (v1) — the reference + Phase 1 seed
   phase-0-claude-code-task.md   # Phase 0 spike: procedure, gold-set, exit criteria
   phase0-scores.md              # (generated) Phase 0 per-show tables + Flags
-  phase0-scores.csv             # (generated) Phase 0 scores, 240 rows
+  phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
+  baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
+  refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
 taste_index/                    # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
   schema.sql                    # axis / show / score tables

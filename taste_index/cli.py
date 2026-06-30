@@ -2,7 +2,7 @@
 
     python -m taste_index init-db          # create the DB and seed the 8 axes
     python -m taste_index axes              # list the seeded axes
-    python -m taste_index backfill          # load docs/phase0-scores.csv into the DB
+    python -m taste_index backfill          # load docs/baseline-scores.csv into the DB
     python -m taste_index score "The Wire"  # score a show via the Claude API
     python -m taste_index show "The Wire"   # print stored scores for a show
 """
@@ -16,8 +16,8 @@ from . import db
 from .rubric import load_rubric
 
 DEFAULT_RUBRIC = "docs/rubric.md"
-DEFAULT_PHASE0_CSV = "docs/phase0-scores.csv"
-PHASE0_MODEL = "phase0-handscored"
+DEFAULT_BASELINE_CSV = "docs/baseline-scores.csv"  # model-scored under current rubric
+PHASE0_MODEL = "phase0-handscored"  # fallback when a CSV has no `model` column
 
 
 def _normalize(name: str) -> str:
@@ -109,8 +109,9 @@ def cmd_backfill(args: argparse.Namespace) -> int:
             if axis_id is None:
                 skipped.add(r["axis"])
                 continue
+            model = (r.get("model") or "").strip() or PHASE0_MODEL
             by_show.setdefault(r["show"], []).append(
-                (axis_id, int(r["value"]), r["confidence"], r["justification"], PHASE0_MODEL)
+                (axis_id, int(r["value"]), r["confidence"], r["justification"], model)
             )
 
     if skipped:
@@ -121,10 +122,7 @@ def cmd_backfill(args: argparse.Namespace) -> int:
         show_id = db.upsert_show(conn, title)
         db.save_scores(conn, show_id, rows)
         total += len(rows)
-    print(
-        f"Backfilled {len(by_show)} shows / {total} scores from {args.csv} "
-        f"(model={PHASE0_MODEL})."
-    )
+    print(f"Backfilled {len(by_show)} shows / {total} scores from {args.csv}.")
     return 0
 
 
@@ -210,8 +208,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--model", default="claude-opus-4-8")
     sp.set_defaults(func=cmd_score)
 
-    sp = sub.add_parser("backfill", help="load Phase 0 hand-scores from a CSV")
-    sp.add_argument("--csv", default=DEFAULT_PHASE0_CSV)
+    sp = sub.add_parser("backfill", help="load baseline scores from a CSV into the DB")
+    sp.add_argument("--csv", default=DEFAULT_BASELINE_CSV)
     sp.set_defaults(func=cmd_backfill)
 
     sp = sub.add_parser("diff", help="re-score live and diff against the stored baseline")
