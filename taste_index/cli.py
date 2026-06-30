@@ -128,6 +128,60 @@ def cmd_backfill(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_diff(args: argparse.Namespace) -> int:
+    """Re-score shows live and diff against their stored (Phase 0) baseline.
+
+    Live scores are computed in memory and NOT saved, so the baseline is preserved.
+    """
+    from .scorer import score_show  # lazy import (needs anthropic + API key)
+
+    rubric_text, _ = load_rubric(args.rubric)
+    conn = db.connect(args.db)
+    axis_rows = db.get_axes(conn)
+    if not axis_rows:
+        print("No axes seeded. Run 'init-db' first.", file=sys.stderr)
+        return 1
+    axis_order = [r["name"] for r in axis_rows]
+
+    all_deltas: list[int] = []
+    for title in args.titles:
+        baseline_rows = db.get_show_scores(conn, title)
+        if not baseline_rows:
+            print(f"\n{title}: no baseline stored — skipped (run 'backfill').", file=sys.stderr)
+            continue
+        base = {_normalize(r["axis"]): r for r in baseline_rows}
+
+        print(f"\nScoring {title!r} live with {args.model} ...", file=sys.stderr)
+        live = score_show(title, rubric_text, axis_order, model=args.model)
+        live_by = {_normalize(s.axis): s for s in live.scores}
+
+        print(f"\n{title}")
+        print(f"{'Axis':<22} {'P0':>3} {'Live':>4} {'Δ':>3}  {'P0-conf':<8} Live-conf")
+        print("-" * 58)
+        for name in axis_order:
+            k = _normalize(name)
+            b, l = base.get(k), live_by.get(k)
+            if b is None or l is None:
+                continue
+            delta = l.value - b["value"]
+            all_deltas.append(abs(delta))
+            print(
+                f"{name:<22} {b['value']:>3} {l.value:>4} {delta:>+3}  "
+                f"{b['confidence']:<8} {l.confidence}"
+            )
+
+    if all_deltas:
+        n = len(all_deltas)
+        exact = sum(d == 0 for d in all_deltas)
+        within1 = sum(d <= 1 for d in all_deltas)
+        print(
+            f"\nSummary over {n} axis comparisons: "
+            f"mean |Δ| = {sum(all_deltas)/n:.2f}, max |Δ| = {max(all_deltas)}, "
+            f"exact = {exact} ({100*exact//n}%), within 1 = {within1} ({100*within1//n}%)"
+        )
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     rows = db.get_show_scores(conn, args.title)
@@ -159,6 +213,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("backfill", help="load Phase 0 hand-scores from a CSV")
     sp.add_argument("--csv", default=DEFAULT_PHASE0_CSV)
     sp.set_defaults(func=cmd_backfill)
+
+    sp = sub.add_parser("diff", help="re-score live and diff against the stored baseline")
+    sp.add_argument("titles", nargs="+")
+    sp.add_argument("--rubric", default=DEFAULT_RUBRIC)
+    sp.add_argument("--model", default="claude-opus-4-8")
+    sp.set_defaults(func=cmd_diff)
 
     sp = sub.add_parser("show", help="print stored scores for a show")
     sp.add_argument("title")
