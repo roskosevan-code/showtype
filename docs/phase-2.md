@@ -54,6 +54,16 @@ the 5–8 of the sparse 30-show space.
   `http.server`) — explore a show's axis profile and nearest neighbours, and recommend
   from shows you like. JSON API at `/api/meta`, `/api/show`, `/api/similar`, `/api/recommend`.
 
+## Done — genre tags
+
+The axes are *structural*, so taste-space encodes structure, not genre/humour — a comedy
+and a drama with the same fingerprint sit together. `docs/genres.csv` adds one primary
+genre per show (categorical metadata, a `genre` column on `show`, loaded with
+`tag-genres`), and `similar` / `recommend` take an optional genre filter. Liking
+Fleabag + Atlanta + Barry recommends prestige dramas unfiltered, but Russian Doll /
+BoJack / PEN15 / Master of None when constrained to Comedy. The web UI exposes this as
+"same genre only" (explore) and a genre dropdown (recommend).
+
 ## Deferred
 
 - **Quality layer** — the rubric notes axes are descriptive and "quality is tracked

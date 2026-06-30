@@ -74,9 +74,15 @@ def distance(a: dict[int, int], b: dict[int, int], axis_ids: list[int]) -> float
 
 
 def nearest(
-    conn: sqlite3.Connection, title: str, n: int = 5
+    conn: sqlite3.Connection,
+    title: str,
+    n: int = 5,
+    allowed: set[str] | None = None,
 ) -> list[tuple[str, float, dict[int, int]]]:
-    """Return the n nearest shows to `title`, as (title, distance, vector)."""
+    """Return the n nearest shows to `title`, as (title, distance, vector).
+
+    `allowed`, if given, restricts candidates to those titles (e.g. one genre).
+    """
     axis_ids, _ = axis_index(conn)
     vecs = show_vectors(conn)
     if title not in vecs:
@@ -87,7 +93,7 @@ def nearest(
     scored = [
         (t, distance(target, v, axis_ids), v)
         for t, v in vecs.items()
-        if t != title and _complete(v, axis_ids)
+        if t != title and _complete(v, axis_ids) and (allowed is None or t in allowed)
     ]
     scored.sort(key=lambda x: x[1])
     return scored[:n]
@@ -98,24 +104,31 @@ def nearest_to_vector(
     target: dict[int, float],
     n: int,
     exclude: set[str],
+    allowed: set[str] | None = None,
 ) -> list[tuple[str, float, dict[int, int]]]:
     """Shows nearest to an arbitrary target vector, excluding `exclude` titles."""
     axis_ids, _ = axis_index(conn)
     scored = [
         (t, math.sqrt(sum((target[i] - v[i]) ** 2 for i in axis_ids)), v)
         for t, v in show_vectors(conn).items()
-        if t not in exclude and _complete(v, axis_ids)
+        if t not in exclude
+        and _complete(v, axis_ids)
+        and (allowed is None or t in allowed)
     ]
     scored.sort(key=lambda x: x[1])
     return scored[:n]
 
 
 def recommend(
-    conn: sqlite3.Connection, liked: list[str], n: int = 10
+    conn: sqlite3.Connection,
+    liked: list[str],
+    n: int = 10,
+    allowed: set[str] | None = None,
 ) -> tuple[list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
     """Recommend from a taste profile = centroid of the liked shows' vectors.
 
     Returns (recognised liked titles, centroid vector, recommendations).
+    `allowed`, if given, restricts recommendations to those titles (e.g. one genre).
     """
     axis_ids, _ = axis_index(conn)
     vecs = show_vectors(conn)
@@ -123,7 +136,7 @@ def recommend(
     if not present:
         raise ValueError("none of the liked shows are in the DB")
     centroid = {i: sum(vecs[t][i] for t in present) / len(present) for i in axis_ids}
-    recs = nearest_to_vector(conn, centroid, n, exclude=set(liked))
+    recs = nearest_to_vector(conn, centroid, n, exclude=set(liked), allowed=allowed)
     return present, centroid, recs
 
 

@@ -19,13 +19,17 @@ def _values(vec: dict[int, int], axis_ids: list[int]) -> list[int]:
 
 
 def _meta(conn) -> dict:
-    axis_ids, _ = space.axis_index(conn)
     axes = [
         {"id": int(r["id"]), "name": r["name"], "code": code}
         for r, code in zip(db.get_axes(conn), space.AXIS_CODES)
     ]
     titles = sorted(t for t in space.show_vectors(conn))
-    return {"axes": axes, "shows": titles}
+    return {
+        "axes": axes,
+        "shows": titles,
+        "genres": db.get_genres(conn),
+        "genre_map": db.genre_map(conn),
+    }
 
 
 def _show(conn, title: str) -> dict:
@@ -42,34 +46,45 @@ def _show(conn, title: str) -> dict:
         }
         for r, code in zip(rows, space.AXIS_CODES)
     ]
-    return {"title": title, "scores": scores}
+    return {"title": title, "genre": db.genre_map(conn).get(title), "scores": scores}
 
 
-def _neighbor_list(conn, items, axis_ids):
+def _neighbor_list(items, axis_ids, gmap):
     return [
-        {"title": t, "distance": round(d, 2), "values": _values(v, axis_ids)}
+        {"title": t, "distance": round(d, 2), "genre": gmap.get(t), "values": _values(v, axis_ids)}
         for t, d, v in items
     ]
 
 
-def _similar(conn, title: str, n: int) -> dict:
+def _allowed_for(conn, genre: str | None) -> set[str] | None:
+    if not genre:
+        return None
+    return {t for t, g in db.genre_map(conn).items() if g == genre}
+
+
+def _similar(conn, title: str, n: int, genre: str | None) -> dict:
     axis_ids, _ = space.axis_index(conn)
-    neighbors = space.nearest(conn, title, n=n)
+    gmap = db.genre_map(conn)
+    neighbors = space.nearest(conn, title, n=n, allowed=_allowed_for(conn, genre))
     target = space.show_vectors(conn)[title]
     return {
         "title": title,
+        "genre": gmap.get(title),
         "values": _values(target, axis_ids),
-        "neighbors": _neighbor_list(conn, neighbors, axis_ids),
+        "neighbors": _neighbor_list(neighbors, axis_ids, gmap),
     }
 
 
-def _recommend(conn, liked: list[str], n: int) -> dict:
+def _recommend(conn, liked: list[str], n: int, genre: str | None) -> dict:
     axis_ids, _ = space.axis_index(conn)
-    present, centroid, recs = space.recommend(conn, liked, n=n)
+    gmap = db.genre_map(conn)
+    present, centroid, recs = space.recommend(
+        conn, liked, n=n, allowed=_allowed_for(conn, genre)
+    )
     return {
         "liked": present,
         "centroid": [round(centroid[i], 1) for i in axis_ids],
-        "recommendations": _neighbor_list(conn, recs, axis_ids),
+        "recommendations": _neighbor_list(recs, axis_ids, gmap),
     }
 
 
@@ -103,11 +118,13 @@ class _Handler(BaseHTTPRequestHandler):
                 return self._json(_show(conn, q.get("title", [""])[0]))
             if u.path == "/api/similar":
                 n = int(q.get("n", ["8"])[0])
-                return self._json(_similar(conn, q.get("title", [""])[0], n))
+                genre = q.get("genre", [""])[0] or None
+                return self._json(_similar(conn, q.get("title", [""])[0], n, genre))
             if u.path == "/api/recommend":
                 liked = [s for s in q.get("like", [""])[0].split("|") if s]
                 n = int(q.get("n", ["12"])[0])
-                return self._json(_recommend(conn, liked, n))
+                genre = q.get("genre", [""])[0] or None
+                return self._json(_recommend(conn, liked, n, genre))
             return self._json({"error": "not found"}, 404)
         except (KeyError, ValueError) as e:
             return self._json({"error": str(e)}, 400)
@@ -157,6 +174,9 @@ PAGE = """<!doctype html>
   ul.list li:last-child { border-bottom:0; }
   .lk { background:none; border:0; color:var(--acc); cursor:pointer; padding:0; font:inherit; text-align:left; }
   .dist { color:var(--mut); font-variant-numeric:tabular-nums; font-size:12.5px; }
+  .badge { background:#0f0d0b; border:1px solid var(--line); color:var(--mut); border-radius:5px; padding:1px 7px; font-size:11.5px; margin-left:8px; }
+  select { background:#0f0d0b; border:1px solid var(--line); color:var(--ink); padding:8px 10px; border-radius:7px; }
+  label.chk { color:var(--mut); font-size:13px; display:flex; align-items:center; gap:6px; margin:10px 0 0; cursor:pointer; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
   .chip { background:#0f0d0b; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:3px 10px; font-size:12.5px; }
   .chip b { cursor:pointer; color:var(--mut); margin-left:6px; }
@@ -169,18 +189,19 @@ PAGE = """<!doctype html>
     <h2>Explore a show</h2>
     <input id="pick" type="text" list="shows" placeholder="Type a show&hellip;" autocomplete="off">
     <datalist id="shows"></datalist>
+    <label class="chk"><input type="checkbox" id="simSameGenre"> Same genre only</label>
     <div id="profile"></div>
   </section>
   <section class="card">
     <h2>Recommend from shows you like</h2>
     <div class="row"><input id="likeInput" type="text" list="shows" placeholder="Add a show you like&hellip;" autocomplete="off"><button id="addLike">Add</button></div>
     <div id="chips" class="chips"></div>
-    <div class="row"><button id="recBtn">Recommend</button><button id="clearBtn" class="ghost">Clear</button></div>
+    <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
     <div id="recs"></div>
   </section>
 </div>
 <script>
-let AXES=[];
+let AXES=[], GENRES=[];
 const liked=[];
 const $=s=>document.querySelector(s);
 const j=async u=>{const r=await fetch(u);return r.json();};
@@ -191,9 +212,10 @@ function bars(values){
     return `<div class="ax"><span class="lbl">${a.name}</span><span class="bar"><span style="width:${v*10}%"></span></span><span class="v">${v}</span></div>`;
   }).join('')+'</div>';
 }
-function neighborList(items, fn){
+function neighborList(items){
+  if(!items.length) return '<div class="dist">No matches.</div>';
   return '<ul class="list">'+items.map(it=>
-    `<li><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button><span class="dist">${it.distance}</span></li>`
+    `<li><span><button class="lk" data-t="${encodeURIComponent(it.title)}">${it.title}</button>${it.genre?`<span class="badge">${it.genre}</span>`:''}</span><span class="dist">${it.distance}</span></li>`
   ).join('')+'</ul>';
 }
 
@@ -201,8 +223,9 @@ async function loadShow(title){
   $('#pick').value=title;
   const d=await j('/api/show?title='+encodeURIComponent(title));
   if(d.error){ $('#profile').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  const sim=await j('/api/similar?title='+encodeURIComponent(title)+'&n=8');
-  let html=bars(d.scores.map(s=>s.value));
+  const sameG=($('#simSameGenre').checked && d.genre)?'&genre='+encodeURIComponent(d.genre):'';
+  const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
+  let html=`<div style="margin:8px 0 2px">${d.genre?`<span class="badge">${d.genre}</span>`:''}</div>`+bars(d.scores.map(s=>s.value));
   html+=d.scores.map(s=>`<div class="just"><b>${s.axis} ${s.value}</b> &middot; ${s.justification} <i>(${s.confidence})</i></div>`).join('');
   html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(sim.neighbors);
   $('#profile').innerHTML=html;
@@ -213,9 +236,12 @@ function renderChips(){
 }
 async function recommend(){
   if(!liked.length){ $('#recs').innerHTML='<div class="dist">Add a few shows first.</div>'; return; }
-  const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|'));
+  const g=$('#recGenre').value;
+  const gp=g?'&genre='+encodeURIComponent(g):'';
+  const d=await j('/api/recommend?n=12&like='+liked.map(encodeURIComponent).join('|')+gp);
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  $('#recs').innerHTML='<h2 style="margin-top:14px">Recommended</h2>'+neighborList(d.recommendations);
+  const head=g?`Recommended &middot; ${g}`:'Recommended';
+  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(d.recommendations);
 }
 
 document.addEventListener('click',e=>{
@@ -223,6 +249,7 @@ document.addEventListener('click',e=>{
   const x=e.target.closest('.chip b'); if(x){ liked.splice(+x.dataset.i,1); renderChips(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
+$('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
 $('#addLike').addEventListener('click',()=>{ const v=$('#likeInput').value.trim(); if(v&&!liked.includes(v)){ liked.push(v); renderChips(); } $('#likeInput').value=''; });
 $('#likeInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addLike').click(); });
 $('#recBtn').addEventListener('click',recommend);
@@ -230,8 +257,9 @@ $('#clearBtn').addEventListener('click',()=>{ liked.length=0; renderChips(); $('
 
 (async()=>{
   const m=await j('/api/meta');
-  AXES=m.axes;
+  AXES=m.axes; GENRES=m.genres||[];
   $('#shows').innerHTML=m.shows.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('');
+  $('#recGenre').innerHTML='<option value="">All genres</option>'+GENRES.map(g=>`<option value="${g}">${g}</option>`).join('');
   renderChips();
 })();
 </script>

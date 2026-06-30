@@ -19,6 +19,11 @@ def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
 
 def init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
+    # Idempotent migration: add `genre` to pre-existing show tables.
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(show)")}
+    if "genre" not in cols:
+        with conn:
+            conn.execute("ALTER TABLE show ADD COLUMN genre TEXT")
 
 
 def seed_axes(conn: sqlite3.Connection, axes: list[Axis]) -> None:
@@ -66,6 +71,35 @@ def save_scores(
             "  scored_at = datetime('now')",
             [(show_id, *r) for r in rows],
         )
+
+
+def tag_genres(conn: sqlite3.Connection, mapping: dict[str, str]) -> int:
+    """Set show.genre for matching titles. Returns the number of rows updated."""
+    updated = 0
+    with conn:
+        for title, genre in mapping.items():
+            cur = conn.execute(
+                "UPDATE show SET genre = ? WHERE title = ?", (genre, title)
+            )
+            updated += cur.rowcount
+    return updated
+
+
+def genre_map(conn: sqlite3.Connection) -> dict[str, str]:
+    return {
+        r["title"]: r["genre"]
+        for r in conn.execute("SELECT title, genre FROM show WHERE genre IS NOT NULL")
+    }
+
+
+def get_genres(conn: sqlite3.Connection) -> list[str]:
+    return [
+        r["genre"]
+        for r in conn.execute(
+            "SELECT genre, COUNT(*) n FROM show WHERE genre IS NOT NULL "
+            "GROUP BY genre ORDER BY n DESC, genre"
+        )
+    ]
 
 
 def get_show_scores(conn: sqlite3.Connection, title: str) -> list[sqlite3.Row]:

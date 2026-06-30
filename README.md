@@ -68,12 +68,19 @@ python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the
 # Phase 2 — retrieval over the 8-axis space (no API calls):
 python -m taste_index similar "The Wire" -n 5                          # nearest shows in taste-space
 python -m taste_index query --where "sweep>=8" --where "register<=4"   # filter by axis profile
+python -m taste_index tag-genres                                       # load genres (docs/genres.csv)
 python -m taste_index serve                                            # web UI at http://127.0.0.1:8000
 ```
 
 The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
 nearest neighbours and recommends from a taste profile (the centroid of shows you like —
 e.g. liking The Wire + Chernobyl + The Americans surfaces the David Simon canon).
+
+**Genre tags** (`docs/genres.csv`, one primary genre per show) are categorical metadata —
+the axes are *structural*, so they don't encode genre/humour. Genre filtering closes that
+gap: liking Fleabag + Atlanta + Barry recommends prestige dramas across all genres but
+Russian Doll / BoJack / PEN15 when constrained to Comedy. The UI exposes "same genre only"
+(explore) and a genre dropdown (recommend).
 
 **Baselines.** `docs/phase0-scores.csv` is the frozen Phase 0 hand-scored spike (kept
 for provenance). `docs/baseline-scores.csv` is the **active diff reference** — the gold
@@ -101,9 +108,11 @@ docs/
   phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
   catalog-scores.csv            # (generated) 231-show catalog for retrieval; load with `backfill --csv`
+  genres.csv                    # (curated) one primary genre per show; load with `tag-genres`
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
+  gen_genres.py                 # Author/validate docs/genres.csv (genre buckets -> flat CSV)
 taste_index/                    # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
   schema.sql                    # axis / show / score tables

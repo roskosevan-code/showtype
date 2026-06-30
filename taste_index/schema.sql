@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS axis (
 CREATE TABLE IF NOT EXISTS show (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     title      TEXT NOT NULL UNIQUE,
+    genre      TEXT,                          -- primary genre tag (see docs/genres.csv)
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

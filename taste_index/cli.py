@@ -21,6 +21,7 @@ from .rubric import load_rubric
 
 DEFAULT_RUBRIC = "docs/rubric.md"
 DEFAULT_BASELINE_CSV = "docs/baseline-scores.csv"  # model-scored under current rubric
+DEFAULT_GENRES_CSV = "docs/genres.csv"
 PHASE0_MODEL = "phase0-handscored"  # fallback when a CSV has no `model` column
 
 
@@ -389,6 +390,20 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_tag_genres(args: argparse.Namespace) -> int:
+    conn = db.connect(args.db)
+    with open(args.csv, newline="", encoding="utf-8") as f:
+        mapping = {r["show"]: r["genre"] for r in csv.DictReader(f)}
+    updated = db.tag_genres(conn, mapping)
+    untagged = conn.execute(
+        "SELECT COUNT(*) FROM show WHERE genre IS NULL"
+    ).fetchone()[0]
+    print(f"Tagged {updated} shows from {args.csv}. Genres: {db.get_genres(conn)}")
+    if untagged:
+        print(f"{untagged} shows still have no genre.", file=sys.stderr)
+    return 0
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     from . import web
 
@@ -466,6 +481,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="axis constraint, e.g. 'sweep>=8' or 'register<=4' (repeatable)",
     )
     sp.set_defaults(func=cmd_query)
+
+    sp = sub.add_parser("tag-genres", help="set show genres from a show,genre CSV")
+    sp.add_argument("--csv", default=DEFAULT_GENRES_CSV)
+    sp.set_defaults(func=cmd_tag_genres)
 
     sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps)")
     sp.add_argument("--host", default="127.0.0.1")
