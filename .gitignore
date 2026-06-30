@@ -1,0 +1,33 @@
+# Claude Code local settings (per-user, not shared)
+.claude/settings.local.json
+
+# Environment / secrets
+.env
+.env.*
+*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Logs / temp
+*.log
+tmp/
