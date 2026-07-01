@@ -1,0 +1,1125 @@
+# Catalog expansion, round 4 — for `taste-index score-batch --file`.
+# 1110 new titles (deduped against the existing 753 and each other).
+# One title per line; lines starting with # are ignored.
+
+# --- US premium / cable / streaming ---
+In Treatment
+Luck
+John from Cincinnati
+The Nevers
+The Third Day
+We Are Who We Are
+The Time Traveler's Wife
+The Idol
+Love & Death
+The Staircase
+Mildred Pierce
+Angels in America
+Full Circle
+Dune: Prophecy
+The Pitt
+Get Millie Black
+The Get Down
+Godless
+Behind Her Eyes
+Clickbait
+Archive 81
+Ripley
+Kaleidoscope
+Painkiller
+Eric
+Seven Seconds
+Away
+The Society
+The Innocents
+The Order
+Warrior Nun
+Firefly Lane
+Ginny & Georgia
+Virgin River
+All the Light We Cannot See
+The Recruit
+American Primeval
+Zero Day
+Hemlock Grove
+Jupiter's Legacy
+The Midnight Club
+Devil in Ohio
+Anatomy of a Scandal
+Stay Close
+The Stranger
+Safe
+Gypsy
+Halston
+Keep Breathing
+Fate: The Winx Saga
+First Kill
+Grand Army
+Low Winter Sun
+The Son
+NOS4A2
+Dispatches from Elsewhere
+61st Street
+Anne Rice's Mayfair Witches
+The Walking Dead: World Beyond
+The Walking Dead: Dead City
+The Walking Dead: Daryl Dixon
+Moonhaven
+Parish
+Rubicon
+The Riches
+Trust
+A Teacher
+Class of '09
+Under the Banner of Heaven
+Kindred
+Grotesquerie
+Alien: Earth
+Say Nothing
+Feud
+Home Before Dark
+Truth Be Told
+Losing Alice
+Calls
+Lisey's Story
+Suspicion
+Shining Girls
+Five Days at Memorial
+Extrapolations
+City on Fire
+The Crowded Room
+Sunny
+Dark Matter
+Land of Women
+Disclaimer
+The Last Thing He Told Me
+Prime Target
+Your Friends & Neighbors
+The Looming Tower
+The Girl from Plainville
+Candy
+Under the Bridge
+Saint X
+Tiny Beautiful Things
+Paradise
+Culprits
+Tell Me Lies
+Runaways
+Helstrom
+Reprisal
+The L Word
+Queer as Folk
+Brotherhood
+The Big C
+On Becoming a God in Central Florida
+The Comey Rule
+The First Lady
+American Rust
+Let the Right One In
+Fellow Travelers
+George & Tammy
+Dexter: New Blood
+Dexter: Original Sin
+The Man Who Fell to Earth
+The L Word: Generation Q
+Sleeper Cell
+Dead Like Me
+Boss
+Magic City
+Da Vinci's Demons
+The White Queen
+The White Princess
+The Spanish Princess
+Sweetbitter
+Hightown
+Power Book II: Ghost
+Power Book III: Raising Kanan
+Power Book IV: Force
+BMF
+The Girlfriend Experience
+Blindspotting
+Three Women
+Mary & George
+The Serpent Queen
+Becoming Elizabeth
+Dangerous Liaisons
+Heels
+Evil
+Halo
+The Offer
+Fatal Attraction
+A Gentleman in Moscow
+Lawmen: Bass Reeves
+Landman
+Rabbit Hole
+School Spirits
+Dr. Death
+Angelyne
+The Continental
+Mrs. Davis
+Based on a True Story
+Vampire Academy
+One of Us Is Lying
+A Friend of the Family
+Bel-Air
+Apples Never Fall
+Long Bright River
+Teacup
+Fight Night: The Million Dollar Heist
+Departure
+The Resort
+Joe vs. Carole
+Homecoming
+Hunters
+The Underground Railroad
+The Wilds
+Panic
+Daisy Jones & The Six
+Dead Ringers
+The Power
+Wilderness
+Cross
+Citadel
+The Terminal List
+Hanna
+Them
+Utopia
+Expats
+Butterfly
+The English
+Swarm
+
+# --- US network / comedy ---
+21 Jump Street
+7th Heaven
+8 Simple Rules
+9-1-1: Lone Star
+A Different World
+A Million Little Things
+Alice
+All American
+All in the Family
+Baretta
+Barnaby Jones
+Barney Miller
+Baskets
+Batwoman
+Becker
+Benson
+Black Lightning
+Blindspot
+Blossom
+Bob Hearts Abishola
+Body of Proof
+Boston Public
+Boy Meets World
+Broad City
+Cagney & Lacey
+Cannon
+Charlie's Angels
+Charmed
+CHiPs
+Coach
+Crossing Jordan
+Cybill
+Dallas
+DC's Legends of Tomorrow
+Defiance
+Designing Women
+Diagnosis: Murder
+Diff'rent Strokes
+Doogie Howser, M.D.
+Dr. Quinn, Medicine Woman
+Dynasty
+Early Edition
+Ed
+Ellen
+Empty Nest
+Everwood
+Falcon Crest
+Family Ties
+Fantasy Island
+Felicity
+FlashForward
+For Life
+Fuller House
+Ghost Whisperer
+Gimme a Break!
+Girlfriends
+Good Times
+Good Trouble
+Grace Under Fire
+Greek
+Grimm
+Growing Pains
+Grown-ish
+Harry's Law
+Hart of Dixie
+Hart to Hart
+Haven
+Hot in Cleveland
+Hotel
+House of Payne
+Hunter
+In the Heat of the Night
+iZombie
+JAG
+Jericho
+Joan of Arcadia
+Judging Amy
+Just Shoot Me!
+Kate & Allie
+Key & Peele
+Kings
+Knight Rider
+Knots Landing
+Kojak
+Kung Fu
+Kyle XY
+La Brea
+Las Vegas
+Last Man Standing
+Laverne & Shirley
+Legacies
+Life
+Life Goes On
+Little House on the Prairie
+Living Single
+Lois & Clark: The New Adventures of Superman
+Louie
+Lucifer
+MacGyver
+Martin
+Matlock
+Maude
+Medium
+Melrose Place
+Mixed-ish
+Moesha
+Mork & Mindy
+My Wife and Kids
+Nancy Drew
+Nash Bridges
+Newhart
+Nurse Jackie
+Once and Again
+One Day at a Time
+Police Woman
+Popular
+Portlandia
+Pretty Little Liars
+Prison Break
+Prodigal Son
+Providence
+Quantico
+Quincy, M.E.
+Reba
+Reign
+Remington Steele
+Reno 911!
+Revenge
+Rizzoli & Isles
+Rosewood
+Roswell
+Roswell, New Mexico
+Royal Pains
+Rules of Engagement
+Rutherford Falls
+Sabrina the Teenage Witch
+Sanford and Son
+Santa Clarita Diet
+Scarecrow and Mrs. King
+Shades of Blue
+Simon & Simon
+Sister, Sister
+Sisters
+Sleepy Hollow
+Sliders
+Soap
+Spenser: For Hire
+Starsky & Hutch
+Station 19
+Step by Step
+Stumptown
+Suburgatory
+S.W.A.T.
+Switched at Birth
+Terra Nova
+The A-Team
+The Bernie Mac Show
+The Bob Newhart Show
+The Conners
+The Cosby Show
+The Dukes of Hazzard
+The Event
+The Facts of Life
+The Fosters
+The Great North
+The Jeffersons
+The Love Boat
+The Nanny
+The Neighborhood
+The New Adventures of Old Christine
+The Night Shift
+The Parkers
+The Pretender
+The Rookie
+The Secret Life of the American Teenager
+The Steve Harvey Show
+The Streets of San Francisco
+The Unit
+The Waltons
+The Wayans Bros.
+Third Watch
+Three's Company
+Timeless
+Titus
+T.J. Hooker
+
+# --- UK / Ireland / AU / NZ / Canada ---
+A Touch of Frost
+Prime Suspect 1973
+Cadfael
+Rebus
+Grantchester
+Death in Paradise
+Whitechapel
+Wire in the Blood
+Silent Witness
+Waking the Dead
+New Tricks
+Scott & Bailey
+DCI Banks
+Hinterland
+River
+Mayflies
+The Missing
+Baptiste
+Karen Pirie
+Annika
+The Chelsea Detective
+McDonald & Dodds
+Ludwig
+Beyond Paradise
+Professor T
+Van der Valk
+The Suspicions of Mr Whicher
+Case Histories
+No Offence
+Red Riding
+The Long Song
+The Sixth Commandment
+White House Farm
+A Confession
+Little Boy Blue
+Appropriate Adult
+Five Daughters
+The Moorside
+Three Girls
+The Serpent
+The Salisbury Poisonings
+The Split
+Victoria
+The Durrells
+Poldark
+Cranford
+Bleak House
+Little Dorrit
+Our Mutual Friend
+North & South
+Wives and Daughters
+Middlemarch
+Daniel Deronda
+Tipping the Velvet
+Life on Mars
+Ashes to Ashes
+Gentleman Jack
+The Village
+Home Fires
+Land Girls
+Mr Selfridge
+The Paradise
+Indian Summers
+Parade's End
+Upstairs Downstairs
+Brideshead Revisited
+The Forsyte Saga
+I, Claudius
+Boys from the Blackstuff
+Cathy Come Home
+The Singing Detective
+Pennies from Heaven
+Edge of Darkness
+GBH
+Tinker Tailor Soldier Spy
+Smiley's People
+A Very British Coup
+To Play the King
+Traitors
+Broken
+The Street
+Last Tango in Halifax
+Cold Feet
+Clocking Off
+At Home with the Braithwaites
+The Royle Family
+Early Doors
+Phoenix Nights
+Gimme Gimme Gimme
+Absolutely Fabulous
+Only Fools and Horses
+Porridge
+Steptoe and Son
+Rising Damp
+Open All Hours
+The Good Life
+To the Manor Born
+Dad's Army
+'Allo 'Allo!
+Keeping Up Appearances
+One Foot in the Grave
+The Vicar of Dibley
+Red Dwarf
+The Young Ones
+Bottom
+Men Behaving Badly
+The Fast Show
+Alan Partridge
+I'm Alan Partridge
+Nighty Night
+The Mighty Boosh
+Green Wing
+Him & Her
+Rev.
+Twenty Twelve
+W1A
+The Windsors
+Stath Lets Flats
+People Just Do Nothing
+Chewing Gum
+Man Like Mobeen
+Famalam
+The Crimson Petal and the White
+Wanderlust
+Doctor Foster
+Apple Tree Yard
+Liar
+Cheat
+The Cry
+Dublin Murders
+Kin
+Love/Hate
+Red Rock
+Single-Handed
+Blood
+Smother
+Hidden Assets
+North Sea Connection
+Harry Wild
+Can't Cope Won't Cope
+The Young Offenders
+Moone Boy
+Frank of Ireland
+Wentworth
+Underbelly
+Prisoner
+Water Rats
+Blue Heelers
+City Homicide
+Rush
+The Secret Life of Us
+Love My Way
+Offspring
+Puberty Blues
+The Slap
+Jack Irish
+Mystery Road
+Total Control
+Deep Water
+The Kettering Incident
+Glitch
+Cleverman
+Secret City
+Janet King
+The Code
+Bloom
+Stateless
+The Newsreader
+Fires
+Wakefield
+Fisk
+Colin from Accounts
+Kath & Kim
+Frontline
+The Games
+Summer Heights High
+We Can Be Heroes
+Upper Middle Bogan
+A Place to Call Home
+Packed to the Rafters
+McLeod's Daughters
+SeaChange
+Miss Fisher's Murder Mysteries
+The Doctor Blake Mysteries
+Bad Mothers
+
+# --- Europe / Latin America / Middle East ---
+Follow the Money
+Rita
+The Legacy
+The Rain
+Equinox
+Dicte
+The Team
+Norsemen
+Nobel
+Lilyhammer
+Home Ground
+State of Happiness
+Twin
+Wisting
+The Valhalla Murders
+Katla
+Blackport
+The Lava Field
+Case
+Prisoners
+Thin Ice
+Blinded
+The Restaurant
+Quicksand
+Snabba Cash
+Young Royals
+Bonus Family
+The Truth Will Out
+Agent Hamilton
+Hidden Agenda
+Modus
+Jordskott
+Thicker than Water
+Greyzone
+Warrior
+The Chestnut Man
+Face to Face
+DNA
+Darkness: Those Who Kill
+Below the Surface
+Ride Upon the Storm
+The Sommerdahl Murders
+Seaside Hotel
+Deadwind
+Sorjonen
+Man in Room 301
+Arctic Circle
+All the Sins
+Bullets
+Nurses
+Rebecka Martinsson
+Beck
+Anno 1790
+Maria Wern
+The Sandhamn Murders
+Springtide
+Deutschland 86
+Deutschland 89
+Perfume
+Dogs of Berlin
+Biohackers
+Skylines
+Tribes of Europa
+We Children from Bahnhof Zoo
+Oktoberfest: Beer and Blood
+Freud
+Charité
+Bad Banks
+Dark Woods
+Kitz
+Munich Games
+The Palace
+King of Stonks
+Blackout
+The Billion Dollar Code
+Betrayed
+Hausen
+Sisi
+Der Pass (Pagan Peak)
+Break
+Para: We Are King
+The Signal
+Cologne 75
+Achtsam morden
+Marseille
+The Forest
+Zone Blanche (Black Spot)
+The Frozen Dead
+Vernon Subutex
+Family Business
+Braqueurs (Ganglands)
+Osmosis
+Mortel
+The Hook Up Plan
+Into the Night
+Vampires
+Balthazar
+Astrid
+Capitani
+The Chalet
+Standing Up
+Notre-Dame
+In Therapy
+Nox
+No Second Chance
+Anthracite
+Blood Coast
+Under Fire
+Section Zéro
+The Break
+Bardot
+Marianne
+The Swarm
+Paris Police 1900
+The Art of Crime
+A French Village
+Les Témoins (Witnesses)
+The Name of the Rose
+Zero
+Baby
+Curon
+Luna Nera
+Summertime
+Generation 56k
+The Law According to Lidia Poët
+Everything Calls for Salvation
+Fedeltà (Faithful)
+Bang Bang Baby
+The Bad Guy
+Il Cacciatore (The Hunter)
+The Miracle
+Devils
+Blocco 181
+Christian
+The Lying Life of Adults
+Inspector Montalbano
+Young Montalbano
+Petra
+Imma Tataranni
+Carlo & Malik (Nero a metà)
+Prisma
+The Sea Beyond (Mare Fuori)
+Skam Italia
+Boris
+Strappare lungo i bordi (Tear Along the Dotted Line)
+This World Can't Tear Me Down
+Supersex
+The Cathedral of the Sea
+The Time in Between
+Grand Hotel
+Velvet
+Morocco: Love in Times of War
+High Seas
+Vis a Vis (Locked Up)
+The Pier
+The Innocent
+The Neighbor
+Someone Has to Die
+White Lines
+Sky Rojo
+Alba
+Intimacy
+Feria: The Darkest Light
+Bitter Daisies
+Unauthorized Living (Vivir sin permiso)
+Fariña (Cocaine Coast)
+The Mess You Leave Behind
+The Longest Night
+Jaguar
+Riot Police (Antidisturbios)
+Toy Boy
+Valeria
+Welcome to Eden
+The Ministry of Time
+Merlí
+Merlí: Sapere Aude
+Foodie Love
+The Asunta Case
+Berlin
+Paquita Salas
+Veneno
+Cardo
+30 Coins
+Gloria
+Rabo de Peixe (Turn of the Tide)
+
+# --- Asia (K/J/C-drama, India, SE Asia) ---
+Business Proposal
+Queen of Tears
+Marry My Husband
+Lovely Runner
+Doctor Slump
+Twinkling Watermelon
+The Uncanny Counter
+Hometown Cha-Cha-Cha
+Start-Up
+What's Wrong with Secretary Kim
+Strong Woman Do Bong-soon
+Weightlifting Fairy Kim Bok-joo
+The King: Eternal Monarch
+While You Were Sleeping
+W: Two Worlds Apart
+Healer
+City Hunter
+The Heirs
+Boys Over Flowers
+My Love from the Star
+Pinocchio
+Dr. Romantic
+Prison Playbook
+Reply 1997
+The Fiery Priest
+Stove League
+Racket Boys
+Nevertheless
+Our Beloved Summer
+Snowdrop
+Rookie Historian Goo Hae-ryung
+100 Days My Prince
+Moon Lovers: Scarlet Heart Ryeo
+The Red Sleeve
+Under the Queen's Umbrella
+Mr. Queen
+The Crowned Clown
+Six Flying Dragons
+Tree with Deep Roots
+Jewel in the Palace
+Empress Ki
+Hwarang
+The King's Affection
+Tomorrow
+Sisyphus: The Myth
+Vagabond
+The K2
+Voice
+Tunnel
+Nobody Knows
+Mouse
+Through the Darkness
+The Devil Judge
+Law School
+Hyena
+Doctor Prisoner
+Extracurricular
+Juvenile Justice
+Little Women
+Again My Life
+Vigilante
+Weak Hero Class 1
+The Worst of Evil
+Reborn Rich
+Divorce Attorney Shin
+Something in the Rain
+Because This Is My First Life
+When the Camellia Blooms
+Fight for My Way
+Encounter
+Romance Is a Bonus Book
+Touch Your Heart
+18 Again
+Navillera
+Record of Youth
+The Good Bad Mother
+Welcome to Samdal-ri
+Castaway Diva
+My Demon
+A Time Called You
+See You in My 19th Life
+King the Land
+Destined with You
+Daily Dose of Sunshine
+Song of the Bandits
+Doctor Cha
+Trolley
+Our Blues
+Thirty-Nine
+Bulgasal: Immortal Souls
+My Dearest
+Connect
+Celebrity
+The Whirlwind
+Chief of Staff
+The Interest of Love
+First Love
+The Naked Director
+Hanzawa Naoki
+Ossan's Love
+Silent
+The Full-Time Wife Escapist
+Rich Man, Poor Woman
+Nodame Cantabile
+Hana Nochi Hare
+Mischievous Kiss
+Liar Game
+Legal High
+Unnatural
+MIU404
+The Journalist
+Ju-on: Origins
+Million Yen Women
+Followers
+Quartet
+JIN
+Doctor-X
+Code Blue
+99.9 Criminal Lawyer
+Switched
+Tokyo Girl
+The Untamed
+Eternal Love
+Ashes of Love
+Love and Redemption
+The Romance of Tiger and Rose
+Story of Yanxi Palace
+Ruyi's Royal Love in the Palace
+Nirvana in Fire
+The Longest Day in Chang'an
+Joy of Life
+Word of Honor
+Love Between Fairy and Devil
+Who Rules the World
+The Journey of Flower
+Goodbye My Princess
+Love Like the Galaxy
+The Story of Minglan
+Empresses in the Palace
+Scarlet Heart
+Princess Agents
+Meteor Garden
+A Love So Beautiful
+Put Your Head on My Shoulder
+Skate Into Love
+Go Ahead
+The Long Ballad
+The Rise of Phoenixes
+Ever Night
+Winter Begonia
+Reset
+The Bad Kids
+The Long Night
+You Are My Glory
+Nothing But Thirty
+Ode to Joy
+New Life Begins
+A Journey to Love
+Story of Kunning Palace
+Till the End of the Moon
+Lost You Forever
+The Knockout
+Legend of Fei
+Mysterious Lotus Casebook
+Blossoms Shanghai
+Sword Snow Stride
+Someday or One Day
+The Victims' Game
+Light the Night
+Wave Makers
+Copycat Killer
+Trinity of Shadows
+Fated to Love You
+In Time with You
+Line Walker
+Sacred Games
+Mirzapur
+The Family Man
+Delhi Crime
+Paatal Lok
+Made in Heaven
+Scam 1992: The Harshad Mehta Story
+Special Ops
+Aarya
+Asur
+
+# --- Animation / anime / unscripted ---
+Adventure Time
+Gravity Falls
+Steven Universe
+Regular Show
+The Amazing World of Gumball
+Over the Garden Wall
+Star vs. the Forces of Evil
+DuckTales
+Bluey
+SpongeBob SquarePants
+The Owl House
+Amphibia
+Infinity Train
+Hilda
+Kipo and the Age of Wonderbeasts
+She-Ra and the Princesses of Power
+Ben 10
+Samurai Jack
+Dexter's Laboratory
+The Powerpuff Girls
+Courage the Cowardly Dog
+Ed, Edd n Eddy
+Foster's Home for Imaginary Friends
+Batman: The Animated Series
+Justice League Unlimited
+Young Justice
+Teen Titans
+Gargoyles
+X-Men: The Animated Series
+Spider-Man: The Animated Series
+Animaniacs
+Tiny Toon Adventures
+Pinky and the Brain
+Rocko's Modern Life
+Hey Arnold!
+Rugrats
+The Ren & Stimpy Show
+Recess
+Kim Possible
+Phineas and Ferb
+Aqua Teen Hunger Force
+Robot Chicken
+Metalocalypse
+The Venture Bros.
+Smiling Friends
+Inside Job
+Tuca & Bertie
+Close Enough
+Final Space
+Star Trek: Lower Decks
+The Midnight Gospel
+Hazbin Hotel
+Helluva Boss
+Centaurworld
+Carmen Sandiego
+Trollhunters
+The Dragon Prince
+Craig of the Creek
+We Bare Bears
+Clarence
+Wander Over Yonder
+The Legend of Vox Machina
+Star Wars: Visions
+Clone High
+Home Movies
+Moral Orel
+Sealab 2021
+Total Drama Island
+Fruits Basket
+Nichijou
+Clannad
+Anohana: The Flower We Saw That Day
+Toradora!
+K-On!
+Great Teacher Onizuka
+Rurouni Kenshin
+Yu Yu Hakusho
+Dragon Ball
+Dragon Ball Super
+JoJo's Bizarre Adventure
+Gintama
+Elfen Lied
+Claymore
+Soul Eater
+Blue Exorcist
+Fairy Tail
+Sword Art Online
+No Game No Life
+The Rising of the Shield Hero
+That Time I Got Reincarnated as a Slime
+Konosuba: God's Blessing on This Wonderful World!
+Overlord
+Mushoku Tensei: Jobless Reincarnation
+Tokyo Ghoul
+Parasyte: The Maxim
+Devilman Crybaby
+Dorohedoro
+Fire Force
+Black Clover
+The Seven Deadly Sins
+Assassination Classroom
+Food Wars!: Shokugeki no Soma
+The Devil Is a Part-Timer!
+My Dress-Up Darling
+Horimiya
+Rascal Does Not Dream of Bunny Girl Senpai
+March Comes in Like a Lion
+Hyouka
+The Melancholy of Haruhi Suzumiya
+Angel Beats!
+Puella Magi Madoka Magica
+Sailor Moon
+Cardcaptor Sakura
+Revolutionary Girl Utena
+Ouran High School Host Club
+Nana
+Mushishi
+Natsume's Book of Friends
+Space Dandy
+Kill la Kill
+FLCL
+Mobile Suit Gundam
+Legend of the Galactic Heroes
+Ergo Proxy
+Wolf's Rain
+Darker than Black
+Terror in Resonance
+Great Pretender
+Odd Taxi
+Ping Pong the Animation
+Beastars
+Land of the Lustrous
+Dororo
+Golden Kamuy
+Yuri!!! on Ice
+Chihayafuru
+Bungo Stray Dogs
+Ranking of Kings
+Planet Earth
+Planet Earth II
+Blue Planet II
+Our Planet
+Frozen Planet
+Cosmos: A Spacetime Odyssey
+Making a Murderer
+Tiger King
+Wild Wild Country
+The Last Dance
+The Vietnam War
+The Civil War
+The Jinx
+The Keepers
+Don't F**k with Cats
+Chef's Table
+O.J.: Made in America
+Cheer
+Last Chance U
+Formula 1: Drive to Survive
+Surviving R. Kelly
+The Vow
+Dirty Money
+Survivor
+The Amazing Race
+Big Brother
+Top Chef
+MasterChef
+Hell's Kitchen
+The Great British Bake Off
+RuPaul's Drag Race
+Project Runway
+The Voice
+American Idol
+America's Got Talent
+Dancing with the Stars
+So You Think You Can Dance
+The Bachelor
+Love Island
+Love Is Blind
+Queer Eye
+Nailed It!
+Shark Tank
+Deadliest Catch
+Forged in Fire
+LEGO Masters
+The Circle
