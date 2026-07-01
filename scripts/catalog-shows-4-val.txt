@@ -1,0 +1,205 @@
+# Validation slice (~200) from catalog-shows-4.txt, stratified across buckets.
+In Treatment
+Luck
+John from Cincinnati
+The Nevers
+The Third Day
+We Are Who We Are
+The Time Traveler's Wife
+The Idol
+Love & Death
+The Staircase
+Mildred Pierce
+Angels in America
+Full Circle
+Dune: Prophecy
+The Pitt
+Get Millie Black
+The Get Down
+Godless
+Behind Her Eyes
+Clickbait
+Archive 81
+Ripley
+Kaleidoscope
+Painkiller
+Eric
+Seven Seconds
+Away
+The Society
+The Innocents
+The Order
+Warrior Nun
+Firefly Lane
+Ginny & Georgia
+Virgin River
+21 Jump Street
+7th Heaven
+8 Simple Rules
+9-1-1: Lone Star
+A Different World
+A Million Little Things
+Alice
+All American
+All in the Family
+Baretta
+Barnaby Jones
+Barney Miller
+Baskets
+Batwoman
+Becker
+Benson
+Black Lightning
+Blindspot
+Blossom
+Bob Hearts Abishola
+Body of Proof
+Boston Public
+Boy Meets World
+Broad City
+Cagney & Lacey
+Cannon
+Charlie's Angels
+Charmed
+CHiPs
+Coach
+Crossing Jordan
+Cybill
+Dallas
+DC's Legends of Tomorrow
+A Touch of Frost
+Prime Suspect 1973
+Cadfael
+Rebus
+Grantchester
+Death in Paradise
+Whitechapel
+Wire in the Blood
+Silent Witness
+Waking the Dead
+New Tricks
+Scott & Bailey
+DCI Banks
+Hinterland
+River
+Mayflies
+The Missing
+Baptiste
+Karen Pirie
+Annika
+The Chelsea Detective
+McDonald & Dodds
+Ludwig
+Beyond Paradise
+Professor T
+Van der Valk
+The Suspicions of Mr Whicher
+Case Histories
+No Offence
+Red Riding
+The Long Song
+The Sixth Commandment
+White House Farm
+A Confession
+Follow the Money
+Rita
+The Legacy
+The Rain
+Equinox
+Dicte
+The Team
+Norsemen
+Nobel
+Lilyhammer
+Home Ground
+State of Happiness
+Twin
+Wisting
+The Valhalla Murders
+Katla
+Blackport
+The Lava Field
+Case
+Prisoners
+Thin Ice
+Blinded
+The Restaurant
+Quicksand
+Snabba Cash
+Young Royals
+Bonus Family
+The Truth Will Out
+Agent Hamilton
+Hidden Agenda
+Modus
+Jordskott
+Thicker than Water
+Greyzone
+Business Proposal
+Queen of Tears
+Marry My Husband
+Lovely Runner
+Doctor Slump
+Twinkling Watermelon
+The Uncanny Counter
+Hometown Cha-Cha-Cha
+Start-Up
+What's Wrong with Secretary Kim
+Strong Woman Do Bong-soon
+Weightlifting Fairy Kim Bok-joo
+The King: Eternal Monarch
+While You Were Sleeping
+W: Two Worlds Apart
+Healer
+City Hunter
+The Heirs
+Boys Over Flowers
+My Love from the Star
+Pinocchio
+Dr. Romantic
+Prison Playbook
+Reply 1997
+The Fiery Priest
+Stove League
+Racket Boys
+Nevertheless
+Our Beloved Summer
+Snowdrop
+Rookie Historian Goo Hae-ryung
+100 Days My Prince
+Moon Lovers: Scarlet Heart Ryeo
+The Red Sleeve
+Adventure Time
+Gravity Falls
+Steven Universe
+Regular Show
+The Amazing World of Gumball
+Over the Garden Wall
+Star vs. the Forces of Evil
+DuckTales
+Bluey
+SpongeBob SquarePants
+The Owl House
+Amphibia
+Infinity Train
+Hilda
+Kipo and the Age of Wonderbeasts
+She-Ra and the Princesses of Power
+Ben 10
+Samurai Jack
+Dexter's Laboratory
+The Powerpuff Girls
+Courage the Cowardly Dog
+Ed, Edd n Eddy
+Foster's Home for Imaginary Friends
+Batman: The Animated Series
+Justice League Unlimited
+Young Justice
+Teen Titans
+Gargoyles
+X-Men: The Animated Series
+Spider-Man: The Animated Series
+Animaniacs
+Tiny Toon Adventures
+Pinky and the Brain
+Rocko's Modern Life
