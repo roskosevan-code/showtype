@@ -177,7 +177,7 @@ function runQuery(){
 document.addEventListener('click',e=>{
   const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
   const rt=e.target.closest('.rsn-t'); if(rt){ const p=$('#chips .rsn[data-t="'+rt.dataset.rt+'"]'); if(p) p.classList.toggle('open'); return; }
-  const rb=e.target.closest('.rsnb'); if(rb){ const t=decodeURIComponent(rb.dataset.t),k=rb.dataset.rsn,cur=reasons[t]||[]; reasons[t]=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]; if(!reasons[t].length) delete reasons[t]; saveReasons(); rb.classList.toggle('on'); if($('#recs').innerHTML) recommend(); return; }
+  const rb=e.target.closest('.rsnb'); if(rb){ const t=decodeURIComponent(rb.dataset.t),k=rb.dataset.rsn,cur=reasons[t]||[]; reasons[t]=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]; const n=reasons[t].length; if(!n) delete reasons[t]; saveReasons(); rb.classList.toggle('on'); const tag=document.querySelector('#chips .rsn-t[data-rt="'+rb.dataset.t+'"]'); if(tag) tag.innerHTML=n?('why&middot;'+n):'why'; if($('#recs').innerHTML) recommend(); return; }
   const rx=e.target.closest('.rxb'); if(rx){ setReaction(decodeURIComponent(rx.dataset.t),rx.dataset.rx); return; }
   const wx=e.target.closest('.wxb'); if(wx){ setWatch(decodeURIComponent(wx.dataset.t),wx.dataset.wx); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
