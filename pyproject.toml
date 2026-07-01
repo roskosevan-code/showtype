@@ -13,6 +13,9 @@ dependencies = [
     "pydantic>=2",
 ]
 
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3"]
+
 [project.scripts]
 taste-index = "taste_index.cli:main"
 
@@ -20,4 +23,4 @@ taste-index = "taste_index.cli:main"
 packages = ["taste_index"]
 
 [tool.setuptools.package-data]
-taste_index = ["schema.sql"]
+taste_index = ["schema.sql", "schema_pg.sql"]

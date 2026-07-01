@@ -11,8 +11,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+# The offline build is always SQLite/zero-dependency. Clear DATABASE_URL for this
+# process so every db.connect() (including the cli.* loaders below) uses SQLite,
+# even if the caller happens to have Postgres configured.
+os.environ.pop("DATABASE_URL", None)
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -242,7 +248,8 @@ def ensure_db(conn) -> None:
 
 
 def main() -> int:
-    conn = db.connect(DB)
+    # Offline build is always SQLite/zero-dependency, even if DATABASE_URL is set.
+    conn = db.connect(DB, force_sqlite=True)
     ensure_db(conn)
     data = build_data(conn)
 

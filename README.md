@@ -72,6 +72,13 @@ python -m taste_index tag-genres                                       # load ge
 python -m taste_index serve                                            # web UI at http://127.0.0.1:8000
 ```
 
+**Optional PostgreSQL backend.** By default everything runs on SQLite (zero
+dependencies). Set `DATABASE_URL` and the same commands run against PostgreSQL instead
+(via psycopg v3, imported only on that path): `pip install -e '.[postgres]'`, `export
+DATABASE_URL=postgresql://…`, then `python -m taste_index db-load` populates Postgres
+from the committed CSVs in one step. The offline `scripts/build_static.py` output stays
+SQLite/zero-dependency regardless. Details in [`docs/postgres.md`](docs/postgres.md).
+
 **Just want the UI?** `python -m taste_index serve` auto-builds the database from the
 committed CSVs on first run — so from a fresh clone it's a single command, no API key and
 no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
@@ -140,6 +147,7 @@ docs/
   catalog-scores.csv            # (generated) 753-show catalog for retrieval; load with `backfill --csv`
   genres.csv                    # show,genre,rank — curated (231) + model-classified; load with `tag-genres`
   quality.csv                   # (generated) model-judged quality + summary + episodes; load with `load-quality`
+  postgres.md                   # optional PostgreSQL backend: setup, db-load, parity tests
   taste-index.html              # (generated) self-contained offline UI; open in any browser
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
@@ -150,11 +158,14 @@ scripts/
   build_quality.py              # Batches-API quality/summary/episode pass -> docs/quality.csv
 taste_index/                    # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
-  schema.sql                    # axis / show / score tables
-  db.py                         # SQLite access layer
+  schema.sql                    # axis / show / score tables (SQLite)
+  schema_pg.sql                 # same schema for PostgreSQL (used when DATABASE_URL is set)
+  db.py                         # dual-backend DB access layer (SQLite default, Postgres via psycopg)
   scorer.py                     # Claude-API scorer (structured outputs)
   space.py                      # taste-space retrieval: k-NN, profile query, recommend (centroid)
   web.py                        # zero-dependency web UI (http.server) + JSON API
-  cli.py                        # init-db / backfill / score* / diff / similar / query / serve / show
-pyproject.toml                  # package metadata + deps (anthropic, pydantic)
+  cli.py                        # init-db / db-load / backfill / score* / diff / similar / query / serve / show
+tests/
+  test_backends.py              # SQLite invariants + SQLite/Postgres parity (PG cases skip w/o DATABASE_URL)
+pyproject.toml                  # package metadata + deps (anthropic, pydantic; optional [postgres] extra)
 ```

@@ -459,6 +459,20 @@ def cmd_load_quality(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_db_load(args: argparse.Namespace) -> int:
+    """Full load from the committed CSVs in one step.
+
+    init schema + seed axes -> backfill catalog -> tag genres -> load quality.
+    Works against whichever backend db.connect() selects (SQLite by default, or
+    Postgres when DATABASE_URL is set), so a full Postgres load is one command.
+    """
+    cmd_init_db(argparse.Namespace(db=args.db, rubric=args.rubric))
+    cmd_backfill(argparse.Namespace(db=args.db, csv=args.catalog))
+    cmd_tag_genres(argparse.Namespace(db=args.db, csv=args.genres))
+    cmd_load_quality(argparse.Namespace(db=args.db, csv=args.quality))
+    return 0
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     import os
 
@@ -496,7 +510,10 @@ def cmd_show(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="taste_index", description=__doc__)
-    p.add_argument("--db", default=db.DEFAULT_DB_PATH, help="SQLite DB path")
+    p.add_argument(
+        "--db", default=db.DEFAULT_DB_PATH,
+        help="SQLite DB path (ignored when DATABASE_URL is set -> Postgres)",
+    )
     sub = p.add_subparsers(dest="command", required=True)
 
     sp = sub.add_parser("init-db", help="create the DB and seed the 8 axes")
@@ -523,7 +540,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=cmd_score_all)
 
     sp = sub.add_parser(
-        "score-batch", help="score many shows via the Batches API (50% cost, async)"
+        "score-batch", help="score many shows via the Batches API (50%% cost, async)"
     )
     sp.add_argument("titles", nargs="*", help="show titles")
     sp.add_argument("--file", help="file with one show title per line (# comments allowed)")
@@ -566,6 +583,17 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("load-quality", help="load quality/summary/episodes from a CSV")
     sp.add_argument("--csv", default=DEFAULT_QUALITY_CSV)
     sp.set_defaults(func=cmd_load_quality)
+
+    sp = sub.add_parser(
+        "db-load",
+        help="full load from committed CSVs (init+seed+backfill+genres+quality); "
+        "populates Postgres when DATABASE_URL is set",
+    )
+    sp.add_argument("--rubric", default=DEFAULT_RUBRIC)
+    sp.add_argument("--catalog", default=DEFAULT_CATALOG_CSV)
+    sp.add_argument("--genres", default=DEFAULT_GENRES_CSV)
+    sp.add_argument("--quality", default=DEFAULT_QUALITY_CSV)
+    sp.set_defaults(func=cmd_db_load)
 
     sp = sub.add_parser("serve", help="launch the web UI (http.server, no deps; auto-builds DB)")
     sp.add_argument("--host", default="127.0.0.1")

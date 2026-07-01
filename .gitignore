@@ -36,3 +36,4 @@ yarn-error.log*
 # Logs / temp
 *.log
 tmp/
+.claude/worktrees/
