@@ -291,7 +291,7 @@ PAGE = """<!doctype html>
   </section>
   <section class="card">
     <h2>Your taste &rarr; recommendations</h2>
-    <div class="hint">Rank a show &#10084; loved &middot; &#128077; liked &middot; &#128581; never interested &middot; &#9209;&#65039; started &amp; stopped (best &rarr; worst). Track with &#128278; watchlist &middot; &#128065; seen. Anything you rank or mark seen is never recommended back; the last two rankings elicit &quot;why it didn&#39;t land&quot; reasons.</div>
+    <div class="hint">Rank a show &#10084;&#65039; loved &middot; &#128077; liked &middot; &#128581; never interested &middot; &#9209;&#65039; started &amp; stopped (best &rarr; worst). Track with &#128278; watchlist &middot; &#128065; seen. Anything you rank or mark seen is never recommended back; the last two rankings elicit &quot;why it didn&#39;t land&quot; reasons.</div>
     <div class="row"><input id="reactInput" type="text" list="shows" placeholder="Add a show, then react&hellip;" autocomplete="off"><button id="addReact">Add</button></div>
     <div id="chips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
@@ -311,7 +311,7 @@ let AXES=[], GENRES=[], TITLESET=new Set();
 // Single affinity ranking, best -> worst. loved/liked are positives; nope
 // (never interested) is a blunt negative; dropped (started & stopped) is a
 // negative that also elicits reason codes -> masked axis pushes.
-const RX=[['loved','❤','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
+const RX=[['loved','❤️','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
 const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen']];
 // negative-only complaints -> per-axis push (axis id -> sign; +1 want more, -1 want less)
 const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
@@ -398,7 +398,7 @@ function renderChips(){
   const reacted=Object.keys(reactions);
   const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
   const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
+  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#65039;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
   const ord={loved:0,liked:1,nope:2,dropped:3}, em=r=>RX.find(x=>x[0]===r)[1];
   reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
   // Only "Started & stopped" (⏹️) carries the "why it didn't land" reason editor.
@@ -450,7 +450,7 @@ function collectPushes(){
 async function recommend(){
   const groups={loved:[],liked:[],nope:[],dropped:[]};
   for(const t in reactions){ if(groups[reactions[t]]) groups[reactions[t]].push(t); }
-  if(!groups.loved.length&&!groups.liked.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
+  if(!groups.loved.length&&!groups.liked.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084;&#65039; or &#128077;).</div>'; return; }
   // Never-interested (🙅) and unreasoned started&stopped (⏹️) push away bluntly;
   // reasoned ⏹️ steers via masked axis pushes and is just excluded via `seen`.
   const seen=new Set(Object.keys(watch).filter(t=>watch[t]==='seen'));

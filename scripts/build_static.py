@@ -33,7 +33,7 @@ STATIC_JS = r"""
 const AXES=DATA.axes, GENRES=DATA.genres, SHOWS=DATA.shows;
 const TITLES=Object.keys(SHOWS).sort();
 // Single affinity ranking, best -> worst (see taste_index/web.py for the rationale).
-const RX=[['loved','❤','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
+const RX=[['loved','❤️','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
 const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen']];
 const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
 const PUSH_STEP=1.5, PUSH_CAP=3;
@@ -126,7 +126,7 @@ function renderChips(){
   const reacted=Object.keys(reactions);
   const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
   const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
+  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#65039;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
   const ord={loved:0,liked:1,nope:2,dropped:3}, em=r=>RX.find(x=>x[0]===r)[1];
   reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
   // Only "Started & stopped" (⏹️) carries the "why it didn't land" reason editor.
@@ -156,7 +156,7 @@ function recommend(){
     else if(r==='dropped'&&!(reasons[t]||[]).length) neg.push(t);    // started&stopped, no reasons: blunt push
     // dropped w/ reasons: steers via collectPushes(); excluded below via `excl`.
   }
-  if(!pos.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
+  if(!pos.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084;&#65039; or &#128077;).</div>'; return; }
   const wlOnly=$('#wlOnly').checked;
   if(wlOnly && !Object.keys(watch).some(t=>watch[t]==='watchlist')){ $('#recs').innerHTML='<div class="dist">Nothing on your watchlist yet — mark shows with &#128278;.</div>'; return; }
   const wsum=pos.reduce((s,[,w])=>s+w,0);
