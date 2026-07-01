@@ -63,11 +63,14 @@ served + offline centroids verified identical.
   (`messages.create`, reusing `params()` from the batch scripts). All three passes now
   204/204; DB scores exported back to `docs/catalog-scores.csv` via `export-catalog`.
   Lesson: **don't panic at 0 succeeded — let batches end, or cancel to force a flush.**
-- **Main expansion (1119 titles, `scripts/catalog-shows-4.txt`): NOT submitted yet.** This
-  is the next big step — `score-batch` + `classify_genres.py` + `build_quality.py`, then
-  `fetch_batches.py`. Held off pending review of the validation slice. Note `build_quality.py`
-  and `classify_genres.py` are **batch-only** (no live flag); scores have a live path
-  (`score-all`).
+- **Main expansion (1110 titles after dedup, `scripts/catalog-shows-4.txt`): SUBMITTED,
+  in flight.** 906 new per pass (204 validation titles skipped). Batch IDs recorded in
+  `docs/round4-main-batches.json` (scores/genres/quality). **To resume:** poll them, then
+  `python3 scripts/fetch_batches.py --file scripts/catalog-shows-4.txt --scores <id>
+  --genres <id> --quality <id>`, live-patch any canceled/failed stragglers, then
+  `export-catalog` + `build_static.py`. Submitted via `scripts/submit_batches.py` (submit +
+  record IDs only, no block-poll). Note `build_quality.py`/`classify_genres.py` are
+  batch-only (no live flag); scores have a live path (`score-all`).
 
 ## Next up — ideas (nothing agreed yet)
 
