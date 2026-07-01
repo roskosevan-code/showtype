@@ -89,13 +89,17 @@ REACTION_WEIGHTS = {"loved": 2.0, "liked": 1.0, "fine": 0.4}
 
 
 def _recommend(conn, positives: dict[str, float], negatives: list[str], n: int,
-               genre: str | None) -> dict:
+               genre: str | None, axis_pushes: dict[int, float] | None = None,
+               seen: set[str] | None = None, only: set[str] | None = None) -> dict:
     axis_ids, _ = space.axis_index(conn)
     gmulti = db.genres_multi(conn)
     qmap = db.quality_map(conn)
     allowed = db.shows_with_genre(conn, genre) if genre else None
+    if only is not None:  # e.g. "from my watchlist only" — intersect with genre
+        allowed = only if allowed is None else (allowed & only)
     present, neg, target, recs = space.recommend(
-        conn, positives, n=n, allowed=allowed, negatives=negatives
+        conn, positives, n=n, allowed=allowed, negatives=negatives,
+        axis_pushes=axis_pushes, exclude_extra=seen,
     )
     return {
         "liked": present,
@@ -160,7 +164,17 @@ class _Handler(BaseHTTPRequestHandler):
                 negatives = [s for s in q.get("nope", [""])[0].split("|") if s]
                 n = int(q.get("n", ["12"])[0])
                 genre = q.get("genre", [""])[0] or None
-                return self._json(_recommend(conn, positives, negatives, n, genre))
+                seen = {s for s in q.get("seen", [""])[0].split("|") if s} or None
+                only = ({s for s in q.get("only", [""])[0].split("|") if s}
+                        if "only" in q else None)
+                pushes: dict[int, float] = {}
+                for p in q.get("push", []):  # each "axisId,delta"
+                    aid, _, delta = p.partition(",")
+                    if aid and delta:
+                        pushes[int(aid)] = pushes.get(int(aid), 0.0) + float(delta)
+                return self._json(_recommend(
+                    conn, positives, negatives, n, genre,
+                    axis_pushes=pushes or None, seen=seen, only=only))
             if u.path == "/api/query":
                 cons = []
                 for f in q.get("f", []):
@@ -246,6 +260,16 @@ PAGE = """<!doctype html>
   .rxb { background:transparent; border:1px solid transparent; border-radius:5px; cursor:pointer; padding:1px 3px; font-size:14px; line-height:1; opacity:.45; }
   .rxb:hover { opacity:1; }
   .rxb.on { opacity:1; border-color:var(--acc); background:#0f0d0b; }
+  .wx { display:inline-flex; gap:1px; margin-left:6px; padding-left:7px; border-left:1px solid var(--line); }
+  .wxb { background:transparent; border:1px solid transparent; border-radius:5px; cursor:pointer; padding:1px 3px; font-size:13px; line-height:1; opacity:.4; filter:grayscale(1); }
+  .wxb:hover { opacity:.85; }
+  .wxb.on { opacity:1; filter:none; border-color:var(--acc); background:#0f0d0b; }
+  .rsn { display:none; width:100%; flex-basis:100%; gap:6px; flex-wrap:wrap; margin:1px 0 5px; }
+  .rsn.open { display:flex; }
+  .rsnb { background:#0f0d0b; border:1px solid var(--line); color:var(--mut); border-radius:20px; padding:2px 9px; font-size:12px; cursor:pointer; }
+  .rsnb:hover { color:var(--ink); }
+  .rsnb.on { color:var(--acc); border-color:var(--acc); }
+  .chip b.rsn-t { color:var(--acc); font-weight:600; }
   .hint { color:var(--mut); font-size:12.5px; margin:-4px 0 10px; }
   .err { color:#e0795b; font-size:13px; }
 </style></head>
@@ -261,11 +285,12 @@ PAGE = """<!doctype html>
   </section>
   <section class="card">
     <h2>Your taste &rarr; recommendations</h2>
-    <div class="hint">React to any show with &#10084; loved &middot; &#128077; liked &middot; &#128528; fine &middot; &#128078; not for me. Loved counts most.</div>
+    <div class="hint">React with &#10084; loved &middot; &#128077; liked &middot; &#128528; fine &middot; &#128078; not for me (affinity). Track with &#128278; watchlist &middot; &#128065; seen &middot; &#128682; bounced (watch-state). Seen &amp; bounced are never recommended.</div>
     <div class="row"><input id="reactInput" type="text" list="shows" placeholder="Add a show, then react&hellip;" autocomplete="off"><button id="addReact">Add</button></div>
     <div id="chips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
     <label class="chk"><input type="checkbox" id="sortQ"> Sort by quality</label>
+    <label class="chk"><input type="checkbox" id="wlOnly"> From my watchlist only</label>
     <div id="recs"></div>
   </section>
   <section class="card grid-full">
@@ -278,8 +303,16 @@ PAGE = """<!doctype html>
 <script>
 let AXES=[], GENRES=[], TITLESET=new Set();
 const RX=[['loved','❤'],['liked','👍'],['fine','😐'],['nope','👎']];
+const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen'],['dropped','🚪','Bounced']];
+// negative-only complaints -> per-axis push (axis id -> sign; +1 want more, -1 want less)
+const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
+const PUSH_STEP=1.5, PUSH_CAP=3;
 let reactions=JSON.parse(localStorage.getItem('ti-reactions')||'{}');
+let watch=JSON.parse(localStorage.getItem('ti-watch')||'{}');
+let reasons=JSON.parse(localStorage.getItem('ti-reasons')||'{}');
 const saveReactions=()=>localStorage.setItem('ti-reactions',JSON.stringify(reactions));
+const saveWatch=()=>localStorage.setItem('ti-watch',JSON.stringify(watch));
+const saveReasons=()=>localStorage.setItem('ti-reasons',JSON.stringify(reasons));
 const $=s=>document.querySelector(s);
 const j=async u=>{const r=await fetch(u);return r.json();};
 
@@ -292,6 +325,7 @@ function bars(values){
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
 const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${r}">${em}</button>`).join('')+'</span>';};
+const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t];return '<span class="wx">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';};
 function whyText(v,ref){
   const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
   const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
@@ -302,7 +336,7 @@ function whyText(v,ref){
 }
 function rowItem(title,genres,quality,tail,why){
   const e=encodeURIComponent(title);
-  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${rxBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
+  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${rxBtns(title)}${wxBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
 }
 function neighborList(items,ref){
   if(!items.length) return '<div class="dist">No matches.</div>';
@@ -315,7 +349,7 @@ async function loadShow(title){
   if(d.error){ $('#profile').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   const sameG=$('#simSameGenre').checked?'&same_genre=1':'';
   const sim=await j('/api/similar?n=8&title='+encodeURIComponent(title)+sameG);
-  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}${qbadge(d.quality)} ${rxBtns(title)}</div>`;
+  let html=`<div style="margin:8px 0 2px">${gbadges(d.genres)}${qbadge(d.quality)} ${rxBtns(title)}${wxBtns(title)}</div>`;
   if(d.summary) html+=`<div class="summary">${d.summary}</div>`;
   const meta=[]; if(d.episodes) meta.push('&approx;'+d.episodes+' episodes'); if(d.seasons) meta.push(d.seasons+' season'+(d.seasons===1?'':'s'));
   if(meta.length) html+=`<div class="metaline">${meta.join(' &middot; ')}</div>`;
@@ -332,12 +366,31 @@ function setReaction(t,r){
   if($('#pick').value) loadShow($('#pick').value);
   if($('#recs').innerHTML) recommend();
 }
+function setWatch(t,w){
+  if(watch[t]===w) delete watch[t]; else watch[t]=w;
+  saveWatch(); renderChips();
+  if($('#pick').value) loadShow($('#pick').value);
+  if($('#recs').innerHTML) recommend();
+}
+function complaintRow(t){
+  const e=encodeURIComponent(t), cur=reasons[t]||[];
+  return `<div class="rsn" data-t="${e}">`+COMPLAINTS.map(([k,lbl])=>`<button class="rsnb${cur.includes(k)?' on':''}" data-rsn="${k}" data-t="${e}">${lbl}</button>`).join('')+'</div>';
+}
 function renderChips(){
   const ts=Object.keys(reactions);
-  if(!ts.length){ $('#chips').innerHTML='<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
+  const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
+  const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
+  if(!ts.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
   const ord={loved:0,liked:1,fine:2,nope:3}, em=r=>RX.find(x=>x[0]===r)[1];
   ts.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
-  $('#chips').innerHTML=ts.map(t=>`<span class="chip">${em(reactions[t])} ${t}<b data-rm="${encodeURIComponent(t)}">&times;</b></span>`).join('');
+  $('#chips').innerHTML=head+ts.map(t=>{
+    const e=encodeURIComponent(t);
+    let s=`<span class="chip">${em(reactions[t])} ${t}`;
+    if(reactions[t]==='nope'){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
+    s+=`<b data-rm="${e}">&times;</b></span>`;
+    if(reactions[t]==='nope') s+=complaintRow(t);
+    return s;
+  }).join('');
 }
 
 function buildFilters(){
@@ -366,17 +419,40 @@ async function runQuery(){
   if(d.count>d.matches.length) html+=`<div class="dist">showing first ${d.matches.length}</div>`;
   $('#filterResults').innerHTML=html;
 }
+function collectPushes(){
+  // Aggregate complaint pushes across negatively-marked shows; cap per axis.
+  const push={};
+  const add=t=>(reasons[t]||[]).forEach(k=>{ const c=COMPLAINTS.find(x=>x[0]===k); if(c) for(const a in c[2]) push[a]=(push[a]||0)+c[2][a]*PUSH_STEP; });
+  for(const t in reactions) if(reactions[t]==='nope'&&(reasons[t]||[]).length) add(t);
+  for(const t in watch) if(watch[t]==='dropped'&&reactions[t]!=='nope'&&(reasons[t]||[]).length) add(t);
+  for(const a in push) push[a]=Math.max(-PUSH_CAP,Math.min(PUSH_CAP,push[a]));
+  return push;
+}
 async function recommend(){
   const groups={loved:[],liked:[],fine:[],nope:[]};
   for(const t in reactions) groups[reactions[t]].push(t);
   if(!groups.loved.length&&!groups.liked.length&&!groups.fine.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
+  // Reasoned not-for-me shows steer via masked axis pushes (not blunt Rocchio),
+  // but are still excluded from results via `seen`.
+  const seen=new Set(Object.keys(watch).filter(t=>watch[t]==='seen'||watch[t]==='dropped'));
+  const blunt=[];
+  groups.nope.forEach(t=>{ if((reasons[t]||[]).length) seen.add(t); else blunt.push(t); });
+  const push=collectPushes();
   const g=$('#recGenre').value;
+  const wlOnly=$('#wlOnly').checked;
+  if(wlOnly && !Object.keys(watch).some(t=>watch[t]==='watchlist')){ $('#recs').innerHTML='<div class="dist">Nothing on your watchlist yet — mark shows with &#128278;.</div>'; return; }
   const p=new URLSearchParams({n:'12'});
-  ['loved','liked','fine','nope'].forEach(r=>{ if(groups[r].length) p.set(r,groups[r].join('|')); });
+  ['loved','liked','fine'].forEach(r=>{ if(groups[r].length) p.set(r,groups[r].join('|')); });
+  if(blunt.length) p.set('nope',blunt.join('|'));
   if(g) p.set('genre',g);
+  if(seen.size) p.set('seen',[...seen].join('|'));
+  if(wlOnly) p.set('only',Object.keys(watch).filter(t=>watch[t]==='watchlist').join('|'));
+  for(const a in push) p.append('push',a+','+push[a]);
   const d=await j('/api/recommend?'+p.toString());
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
-  let head='Recommended'; if(g) head+=' &middot; '+g; if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' not-for-me';
+  let head='Recommended'; if(g) head+=' &middot; '+g; if(wlOnly) head+=' &middot; from watchlist';
+  if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' not-for-me';
+  if(Object.keys(push).length) head+=' &middot; tuned to your reasons';
   let recs=d.recommendations;
   if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
   $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs, d.centroid);
@@ -384,9 +460,12 @@ async function recommend(){
 
 document.addEventListener('click',e=>{
   const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
+  const rt=e.target.closest('.rsn-t'); if(rt){ const p=$('#chips .rsn[data-t="'+rt.dataset.rt+'"]'); if(p) p.classList.toggle('open'); return; }
+  const rb=e.target.closest('.rsnb'); if(rb){ const t=decodeURIComponent(rb.dataset.t),k=rb.dataset.rsn,cur=reasons[t]||[]; reasons[t]=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]; if(!reasons[t].length) delete reasons[t]; saveReasons(); rb.classList.toggle('on'); if($('#recs').innerHTML) recommend(); return; }
   const rx=e.target.closest('.rxb'); if(rx){ setReaction(decodeURIComponent(rx.dataset.t),rx.dataset.rx); return; }
+  const wx=e.target.closest('.wxb'); if(wx){ setWatch(decodeURIComponent(wx.dataset.t),wx.dataset.wx); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
-  const x=e.target.closest('.chip b'); if(x){ delete reactions[decodeURIComponent(x.dataset.rm)]; saveReactions(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
+  const x=e.target.closest('.chip b[data-rm]'); if(x){ const t=decodeURIComponent(x.dataset.rm); delete reactions[t]; delete reasons[t]; saveReactions(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
@@ -394,7 +473,8 @@ $('#addReact').addEventListener('click',()=>{ const v=$('#reactInput').value.tri
 $('#reactInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addReact').click(); });
 $('#recBtn').addEventListener('click',recommend);
 $('#sortQ').addEventListener('change',()=>{ if($('#recs').innerHTML) recommend(); });
-$('#clearBtn').addEventListener('click',()=>{ reactions={}; saveReactions(); renderChips(); $('#recs').innerHTML=''; if($('#pick').value) loadShow($('#pick').value); });
+$('#wlOnly').addEventListener('change',()=>{ if($('#recs').innerHTML) recommend(); });
+$('#clearBtn').addEventListener('click',()=>{ reactions={}; reasons={}; saveReactions(); saveReasons(); renderChips(); $('#recs').innerHTML=''; if($('#pick').value) loadShow($('#pick').value); });
 $('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
 $('#applyFilter').addEventListener('click',runQuery);
 $('#resetFilter').addEventListener('click',()=>{ document.querySelectorAll('.frow').forEach(r=>{ r.querySelector('[data-kind=min]').value=0; r.querySelector('[data-kind=max]').value=10; $('#frd-'+r.dataset.axis).innerHTML='0&ndash;10'; }); $('#filterResults').innerHTML=''; });

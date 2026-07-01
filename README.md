@@ -88,6 +88,15 @@ taste centroid (Loved counts 2×, Liked 1×, Fine 0.4×) pushed away from not-fo
 with min/max sliders per axis (e.g. Sweep 8–10 + Register 0–4 + Verisimilitude 8–10 → the
 restrained systems-storytelling cluster).
 
+**Watch-state** (Phase 4 ②) is tracked separately from affinity: mark a show 🔖 watchlist,
+👁 seen, or 🚪 bounced. Seen and bounced shows are never recommended again; a "From my
+watchlist only" toggle ranks your own watchlist by taste fit. **"Why I bounced"** (Phase 4
+③) adds six everyday complaints under each 👎 — *too slow, hard to follow, couldn't connect,
+too try-hard, didn't buy it, too corny* — each mapping to a **masked per-axis push** (e.g.
+"too slow" nudges the Propulsion target up) so a dislike steers the recommendation on the
+axes you actually reacted to, not the whole vector. Watch-state and reasons persist in
+`localStorage` and are mirrored in the offline build.
+
 **Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is
 primary) are categorical metadata — the axes are *structural*, so they don't encode
 genre/humour. Genre filtering closes that gap: liking Fleabag + Atlanta + Barry recommends

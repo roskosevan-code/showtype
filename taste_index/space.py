@@ -126,6 +126,8 @@ def recommend(
     allowed: set[str] | None = None,
     negatives: list[str] | None = None,
     beta: float = 0.5,
+    axis_pushes: dict[int, float] | None = None,
+    exclude_extra: set[str] | None = None,
 ) -> tuple[list[str], list[str], dict[int, float], list[tuple[str, float, dict[int, int]]]]:
     """Recommend from a *weighted* taste profile, pushed away from negatives.
 
@@ -133,6 +135,12 @@ def recommend(
     Fine 0.4); the taste point is the weight-weighted centroid of those shows.
     `negatives` (e.g. "not for me") shift the query away from their centroid
     (Rocchio): target = C_like + beta*(C_like - C_neg), clamped to [0, 10].
+
+    `axis_pushes` maps an axis id to a signed additive nudge (e.g. from
+    "why I bounced" complaints — "too slow" pushes Propulsion up), applied
+    per-axis *after* the Rocchio shift so it steers only the named axes.
+    `exclude_extra` drops further titles from the candidate pool (e.g. shows
+    already finished or abandoned via watch-state) without moving the target.
 
     Returns (recognised positives, recognised negatives, query vector, recommendations).
     """
@@ -151,13 +159,17 @@ def recommend(
     if neg:
         c_neg = {i: sum(vecs[t][i] for t in neg) / len(neg) for i in axis_ids}
         target = {
-            i: min(10.0, max(0.0, c_like[i] + beta * (c_like[i] - c_neg[i])))
-            for i in axis_ids
+            i: c_like[i] + beta * (c_like[i] - c_neg[i]) for i in axis_ids
         }
     else:
-        target = c_like
+        target = dict(c_like)
 
-    exclude = set(positives) | set(negatives or [])
+    if axis_pushes:
+        for i in axis_ids:
+            target[i] += axis_pushes.get(i, 0.0)
+    target = {i: min(10.0, max(0.0, target[i])) for i in axis_ids}
+
+    exclude = set(positives) | set(negatives or []) | (exclude_extra or set())
     recs = nearest_to_vector(conn, target, n, exclude=exclude, allowed=allowed)
     return [t for t, _ in pos], neg, target, recs
 
