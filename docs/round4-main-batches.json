@@ -1,0 +1,9 @@
+{
+  "file": "scripts/catalog-shows-4.txt",
+  "model": "claude-opus-4-8",
+  "batches": {
+    "scores": "msgbatch_01KSRcmJq3P4benkD1f8bV3S",
+    "genres": "msgbatch_01BTbgavmhKHhFN1BXRfYVXq",
+    "quality": "msgbatch_01GCdqjz5piEhkwAWAWa2nHV"
+  }
+}
