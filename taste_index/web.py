@@ -85,7 +85,7 @@ def _similar(conn, title: str, n: int, genre: str | None, same_genre: bool) -> d
 
 
 # Affinity reaction -> weight for the weighted-centroid recommender.
-REACTION_WEIGHTS = {"loved": 2.0, "liked": 1.0, "fine": 0.4}
+REACTION_WEIGHTS = {"loved": 2.0, "liked": 1.0}
 
 
 def _recommend(conn, positives: dict[str, float], negatives: list[str], n: int,
@@ -291,7 +291,7 @@ PAGE = """<!doctype html>
   </section>
   <section class="card">
     <h2>Your taste &rarr; recommendations</h2>
-    <div class="hint">React with &#10084; loved &middot; &#128077; liked &middot; &#128528; fine &middot; &#128078; not for me (affinity). Track with &#128278; watchlist &middot; &#128065; seen &middot; &#128682; bounced (watch-state). Seen &amp; bounced are never recommended.</div>
+    <div class="hint">Rank a show &#10084; loved &middot; &#128077; liked &middot; &#128581; never interested &middot; &#9209;&#65039; started &amp; stopped (best &rarr; worst). Track with &#128278; watchlist &middot; &#128065; seen. Anything you rank or mark seen is never recommended back; the last two rankings elicit &quot;why it didn&#39;t land&quot; reasons.</div>
     <div class="row"><input id="reactInput" type="text" list="shows" placeholder="Add a show, then react&hellip;" autocomplete="off"><button id="addReact">Add</button></div>
     <div id="chips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
@@ -308,8 +308,11 @@ PAGE = """<!doctype html>
 </div>
 <script>
 let AXES=[], GENRES=[], TITLESET=new Set();
-const RX=[['loved','❤'],['liked','👍'],['fine','😐'],['nope','👎']];
-const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen'],['dropped','🚪','Bounced']];
+// Single affinity ranking, best -> worst. loved/liked are positives; nope
+// (never interested) is a blunt negative; dropped (started & stopped) is a
+// negative that also elicits reason codes -> masked axis pushes.
+const RX=[['loved','❤','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
+const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen']];
 // negative-only complaints -> per-axis push (axis id -> sign; +1 want more, -1 want less)
 const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
 const PUSH_STEP=1.5, PUSH_CAP=3;
@@ -319,6 +322,12 @@ let reasons=JSON.parse(localStorage.getItem('ti-reasons')||'{}');
 const saveReactions=()=>localStorage.setItem('ti-reactions',JSON.stringify(reactions));
 const saveWatch=()=>localStorage.setItem('ti-watch',JSON.stringify(watch));
 const saveReasons=()=>localStorage.setItem('ti-reasons',JSON.stringify(reasons));
+// Migrate the old model: 🚪 bounced watch-state -> ⏹️ reaction; a reasoned 👎
+// (watched & disliked) -> ⏹️; drop the retired 😐 fine.
+(function(){let m=false;
+  for(const t in watch){ if(watch[t]==='dropped'){ if(!reactions[t]) reactions[t]='dropped'; delete watch[t]; m=true; } }
+  for(const t in reactions){ if(reactions[t]==='nope'&&(reasons[t]||[]).length){ reactions[t]='dropped'; m=true; } else if(reactions[t]==='fine'){ delete reactions[t]; m=true; } }
+  if(m){ saveReactions(); saveWatch(); }})();
 const $=s=>document.querySelector(s);
 const j=async u=>{const r=await fetch(u);return r.json();};
 
@@ -330,7 +339,7 @@ function bars(values){
 }
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
-const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${r}">${em}</button>`).join('')+'</span>';};
+const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em,lbl])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';};
 const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t],cw=WATCH.find(w=>w[0]===cur);
   const tog=`<button class="wxtog${cur?' set':''}" data-wxtog="${e}" title="${cw?cw[2]:'Watch status'}">${cw?cw[1]:'&#9662;'}</button>`;
   const grp='<span class="wxg">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';
@@ -387,22 +396,19 @@ function complaintRow(t){
 }
 function renderChips(){
   const reacted=Object.keys(reactions);
-  const droppedOnly=Object.keys(watch).filter(t=>watch[t]==='dropped'&&!reactions[t]);
   const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
   const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!reacted.length&&!droppedOnly.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
-  const ord={loved:0,liked:1,fine:2,nope:3}, em=r=>RX.find(x=>x[0]===r)[1];
+  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
+  const ord={loved:0,liked:1,nope:2,dropped:3}, em=r=>RX.find(x=>x[0]===r)[1];
   reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
-  droppedOnly.sort((a,b)=>a.localeCompare(b));
-  // Negative shows (nope, or bounced watch-state) carry a "why it didn't land" editor.
-  const items=[...reacted.map(t=>({t,emo:em(reactions[t]),neg:reactions[t]==='nope',rm:'rm'})),
-               ...droppedOnly.map(t=>({t,emo:'&#128682;',neg:true,rm:'rmw'}))];
-  $('#chips').innerHTML=head+items.map(({t,emo,neg,rm})=>{
+  // Only "Started & stopped" (⏹️) carries the "why it didn't land" reason editor.
+  const items=reacted.map(t=>({t,emo:em(reactions[t]),why:reactions[t]==='dropped'}));
+  $('#chips').innerHTML=head+items.map(({t,emo,why})=>{
     const e=encodeURIComponent(t);
     let s=`<span class="chip">${emo} ${t}`;
-    if(neg){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
-    s+=`<b data-${rm}="${e}">&times;</b></span>`;
-    if(neg) s+=complaintRow(t);
+    if(why){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
+    s+=`<b data-rm="${e}">&times;</b></span>`;
+    if(why) s+=complaintRow(t);
     return s;
   }).join('');
 }
@@ -437,26 +443,25 @@ function collectPushes(){
   // Aggregate complaint pushes across negatively-marked shows; cap per axis.
   const push={};
   const add=t=>(reasons[t]||[]).forEach(k=>{ const c=COMPLAINTS.find(x=>x[0]===k); if(c) for(const a in c[2]) push[a]=(push[a]||0)+c[2][a]*PUSH_STEP; });
-  for(const t in reactions) if(reactions[t]==='nope'&&(reasons[t]||[]).length) add(t);
-  for(const t in watch) if(watch[t]==='dropped'&&reactions[t]!=='nope'&&(reasons[t]||[]).length) add(t);
+  for(const t in reactions) if(reactions[t]==='dropped'&&(reasons[t]||[]).length) add(t);
   for(const a in push) push[a]=Math.max(-PUSH_CAP,Math.min(PUSH_CAP,push[a]));
   return push;
 }
 async function recommend(){
-  const groups={loved:[],liked:[],fine:[],nope:[]};
-  for(const t in reactions) groups[reactions[t]].push(t);
-  if(!groups.loved.length&&!groups.liked.length&&!groups.fine.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
-  // Reasoned not-for-me shows steer via masked axis pushes (not blunt Rocchio),
-  // but are still excluded from results via `seen`.
-  const seen=new Set(Object.keys(watch).filter(t=>watch[t]==='seen'||watch[t]==='dropped'));
-  const blunt=[];
-  groups.nope.forEach(t=>{ if((reasons[t]||[]).length) seen.add(t); else blunt.push(t); });
+  const groups={loved:[],liked:[],nope:[],dropped:[]};
+  for(const t in reactions){ if(groups[reactions[t]]) groups[reactions[t]].push(t); }
+  if(!groups.loved.length&&!groups.liked.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
+  // Never-interested (🙅) and unreasoned started&stopped (⏹️) push away bluntly;
+  // reasoned ⏹️ steers via masked axis pushes and is just excluded via `seen`.
+  const seen=new Set(Object.keys(watch).filter(t=>watch[t]==='seen'));
+  const blunt=[...groups.nope];
+  groups.dropped.forEach(t=>{ if((reasons[t]||[]).length) seen.add(t); else blunt.push(t); });
   const push=collectPushes();
   const g=$('#recGenre').value;
   const wlOnly=$('#wlOnly').checked;
   if(wlOnly && !Object.keys(watch).some(t=>watch[t]==='watchlist')){ $('#recs').innerHTML='<div class="dist">Nothing on your watchlist yet — mark shows with &#128278;.</div>'; return; }
   const p=new URLSearchParams({n:'12'});
-  ['loved','liked','fine'].forEach(r=>{ if(groups[r].length) p.set(r,groups[r].join('|')); });
+  ['loved','liked'].forEach(r=>{ if(groups[r].length) p.set(r,groups[r].join('|')); });
   if(blunt.length) p.set('nope',blunt.join('|'));
   if(g) p.set('genre',g);
   if(seen.size) p.set('seen',[...seen].join('|'));
@@ -465,7 +470,7 @@ async function recommend(){
   const d=await j('/api/recommend?'+p.toString());
   if(d.error){ $('#recs').innerHTML='<div class="err">'+d.error+'</div>'; return; }
   let head='Recommended'; if(g) head+=' &middot; '+g; if(wlOnly) head+=' &middot; from watchlist';
-  if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' not-for-me';
+  if(d.disliked&&d.disliked.length) head+=' &middot; away from '+d.disliked.length+' you rejected';
   if(Object.keys(push).length) head+=' &middot; tuned to your reasons';
   let recs=d.recommendations;
   if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }

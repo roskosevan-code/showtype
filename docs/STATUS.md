@@ -24,15 +24,21 @@ Quick resume note (last updated after round-4 validation slice folded in).
 - **Phase 1** — scoring pipeline; rubric self-corrected 3× from diff data.
 - **Phase 2** — retrieval, recommendation, multi-genre filtering, web UI, offline build.
 - **Phase 3** — quality layer (model-judged).
-- **Phase 4 ①** — graded reactions (❤ loved / 👍 liked / 😐 fine / 👎 not-for-me) →
-  *weighted* recommendation centroid (Loved 2, Liked 1, Fine 0.4) + Rocchio push from
-  not-for-me; reactions persist in `localStorage`.
-- **Phase 4 ②** — watch-state, separate from affinity: 🔖 watchlist / 👁 seen /
-  🚪 bounced (haven't-seen = unset), stored in `localStorage` (`ti-watch`). Seen &
-  bounced are **excluded** from recommendations; a "From my watchlist only" toggle
+- **Phase 4 ①** — a single **affinity ranking**, best → worst: ❤ loved (w2) / 👍 liked (w1) /
+  🙅 never-interested / ⏹️ started-&-stopped. Loved+liked form the *weighted* centroid;
+  the two negatives push away (Rocchio) — never-interested is always blunt, started-&-stopped
+  steers via reason-code axis pushes when reasoned (else blunt). Everything ranked (and 👁 seen)
+  is excluded from recs. Persists in `localStorage`; a load-time migration folds the old
+  😐 fine (dropped) and 🚪 bounced watch-state into this scale. *(Superseded the original
+  ❤/👍/😐/👎 + separate 🚪-bounced watch-state; the retired weight was Fine 0.4.)*
+- **Phase 4 ②** — watch-state, separate from affinity: 🔖 watchlist / 👁 seen
+  (haven't-seen = unset), stored in `localStorage` (`ti-watch`). *(🚪 bounced moved into the
+  ① ranking as ⏹️ started-&-stopped.)* Seen is **excluded** from recommendations; a
+  "From my watchlist only" toggle
   restricts recs to your watchlist (intersected with any genre filter). Engine hooks:
   `space.recommend(exclude_extra=…)` + `/api/recommend?seen=…&only=…`.
-- **Phase 4 ③** — "why I bounced" chips on every 👎 show (`ti-reasons`): 6 everyday
+- **Phase 4 ③** — "why I bounced" chips on every ⏹️ started-&-stopped show (`ti-reasons`),
+  the only ranking level that elicits reasons: 6 everyday
   complaints → *masked per-axis* pushes (Too slow → Propulsion↑ · Hard to follow →
   Density↓ · Couldn't connect → Interiority↑ · Too try-hard → Authorial↓ · Didn't buy
   it → Verisimilitude↑ · Too corny → Register↓ + Verisimilitude↑). Each complaint nudges

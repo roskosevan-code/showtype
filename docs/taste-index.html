@@ -88,7 +88,7 @@
   </section>
   <section class="card">
     <h2>Your taste &rarr; recommendations</h2>
-    <div class="hint">React with &#10084; loved &middot; &#128077; liked &middot; &#128528; fine &middot; &#128078; not for me (affinity). Track with &#128278; watchlist &middot; &#128065; seen &middot; &#128682; bounced (watch-state). Seen &amp; bounced are never recommended.</div>
+    <div class="hint">Rank a show &#10084; loved &middot; &#128077; liked &middot; &#128581; never interested &middot; &#9209;&#65039; started &amp; stopped (best &rarr; worst). Track with &#128278; watchlist &middot; &#128065; seen. Anything you rank or mark seen is never recommended back; the last two rankings elicit &quot;why it didn&#39;t land&quot; reasons.</div>
     <div class="row"><input id="reactInput" type="text" list="shows" placeholder="Add a show, then react&hellip;" autocomplete="off"><button id="addReact">Add</button></div>
     <div id="chips" class="chips"></div>
     <div class="row"><button id="recBtn">Recommend</button><select id="recGenre"></select><button id="clearBtn" class="ghost">Clear</button></div>
@@ -108,8 +108,9 @@ const DATA={"axes":[{"id":1,"name":"Propulsion","code":"Prop"},{"id":2,"name":"S
 
 const AXES=DATA.axes, GENRES=DATA.genres, SHOWS=DATA.shows;
 const TITLES=Object.keys(SHOWS).sort();
-const RX=[['loved','❤'],['liked','👍'],['fine','😐'],['nope','👎']];
-const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen'],['dropped','🚪','Bounced']];
+// Single affinity ranking, best -> worst (see taste_index/web.py for the rationale).
+const RX=[['loved','❤','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
+const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen']];
 const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
 const PUSH_STEP=1.5, PUSH_CAP=3;
 let reactions=JSON.parse(localStorage.getItem('ti-reactions')||'{}');
@@ -118,6 +119,12 @@ let reasons=JSON.parse(localStorage.getItem('ti-reasons')||'{}');
 const saveReactions=()=>localStorage.setItem('ti-reactions',JSON.stringify(reactions));
 const saveWatch=()=>localStorage.setItem('ti-watch',JSON.stringify(watch));
 const saveReasons=()=>localStorage.setItem('ti-reasons',JSON.stringify(reasons));
+// Migrate the old model: 🚪 bounced watch-state -> ⏹️ reaction; a reasoned 👎
+// (watched & disliked) -> ⏹️; drop the retired 😐 fine.
+(function(){let m=false;
+  for(const t in watch){ if(watch[t]==='dropped'){ if(!reactions[t]) reactions[t]='dropped'; delete watch[t]; m=true; } }
+  for(const t in reactions){ if(reactions[t]==='nope'&&(reasons[t]||[]).length){ reactions[t]='dropped'; m=true; } else if(reactions[t]==='fine'){ delete reactions[t]; m=true; } }
+  if(m){ saveReactions(); saveWatch(); }})();
 const $=s=>document.querySelector(s);
 
 const dist=(a,b)=>Math.sqrt(a.reduce((s,v,i)=>s+(v-b[i])**2,0));
@@ -126,7 +133,7 @@ const showsWithGenre=g=>TITLES.filter(t=>genresOf(t).includes(g));
 const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.length);
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
-const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${r}">${em}</button>`).join('')+'</span>';};
+const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em,lbl])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';};
 const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t],cw=WATCH.find(w=>w[0]===cur);
   const tog=`<button class="wxtog${cur?' set':''}" data-wxtog="${e}" title="${cw?cw[2]:'Watch status'}">${cw?cw[1]:'&#9662;'}</button>`;
   const grp='<span class="wxg">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';
@@ -193,36 +200,38 @@ function complaintRow(t){
 }
 function renderChips(){
   const reacted=Object.keys(reactions);
-  const droppedOnly=Object.keys(watch).filter(t=>watch[t]==='dropped'&&!reactions[t]);
   const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
   const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!reacted.length&&!droppedOnly.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
-  const ord={loved:0,liked:1,fine:2,nope:3}, em=r=>RX.find(x=>x[0]===r)[1];
+  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
+  const ord={loved:0,liked:1,nope:2,dropped:3}, em=r=>RX.find(x=>x[0]===r)[1];
   reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
-  droppedOnly.sort((a,b)=>a.localeCompare(b));
-  const items=[...reacted.map(t=>({t,emo:em(reactions[t]),neg:reactions[t]==='nope',rm:'rm'})),
-               ...droppedOnly.map(t=>({t,emo:'&#128682;',neg:true,rm:'rmw'}))];
-  $('#chips').innerHTML=head+items.map(({t,emo,neg,rm})=>{
+  // Only "Started & stopped" (⏹️) carries the "why it didn't land" reason editor.
+  const items=reacted.map(t=>({t,emo:em(reactions[t]),why:reactions[t]==='dropped'}));
+  $('#chips').innerHTML=head+items.map(({t,emo,why})=>{
     const e=encodeURIComponent(t);
     let s=`<span class="chip">${emo} ${t}`;
-    if(neg){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
-    s+=`<b data-${rm}="${e}">&times;</b></span>`;
-    if(neg) s+=complaintRow(t);
+    if(why){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
+    s+=`<b data-rm="${e}">&times;</b></span>`;
+    if(why) s+=complaintRow(t);
     return s;
   }).join('');
 }
 function collectPushes(){
   const push={};
   const add=t=>(reasons[t]||[]).forEach(k=>{ const c=COMPLAINTS.find(x=>x[0]===k); if(c) for(const a in c[2]) push[a]=(push[a]||0)+c[2][a]*PUSH_STEP; });
-  for(const t in reactions) if(reactions[t]==='nope'&&(reasons[t]||[]).length) add(t);
-  for(const t in watch) if(watch[t]==='dropped'&&reactions[t]!=='nope'&&(reasons[t]||[]).length) add(t);
+  for(const t in reactions) if(reactions[t]==='dropped'&&(reasons[t]||[]).length) add(t);
   for(const a in push) push[a]=Math.max(-PUSH_CAP,Math.min(PUSH_CAP,push[a]));
   return push;
 }
 function recommend(){
-  const W={loved:2,liked:1,fine:0.4};
+  const W={loved:2,liked:1};
   const pos=[], neg=[];
-  for(const t in reactions){ if(!SHOWS[t]) continue; if(reactions[t]==='nope'){ if(!(reasons[t]||[]).length) neg.push(t); } else pos.push([t,W[reactions[t]]]); }
+  for(const t in reactions){ if(!SHOWS[t]) continue; const r=reactions[t];
+    if(r==='loved'||r==='liked') pos.push([t,W[r]]);
+    else if(r==='nope') neg.push(t);                                 // never interested: blunt push
+    else if(r==='dropped'&&!(reasons[t]||[]).length) neg.push(t);    // started&stopped, no reasons: blunt push
+    // dropped w/ reasons: steers via collectPushes(); excluded below via `excl`.
+  }
   if(!pos.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084; or &#128077;).</div>'; return; }
   const wlOnly=$('#wlOnly').checked;
   if(wlOnly && !Object.keys(watch).some(t=>watch[t]==='watchlist')){ $('#recs').innerHTML='<div class="dist">Nothing on your watchlist yet — mark shows with &#128278;.</div>'; return; }
@@ -234,12 +243,12 @@ function recommend(){
   for(const a in push) target[+a-1]+=push[a];  // axis id is 1-based
   target=target.map(v=>Math.min(10,Math.max(0,v)));
   const excl=new Set(Object.keys(reactions));
-  for(const t in watch) if(watch[t]==='seen'||watch[t]==='dropped') excl.add(t);
+  for(const t in watch) if(watch[t]==='seen') excl.add(t);
   const g=$('#recGenre').value;
   let allowed=g?new Set(showsWithGenre(g)):null;
   if(wlOnly){ const wl=new Set(Object.keys(watch).filter(t=>watch[t]==='watchlist')); allowed=allowed?new Set([...allowed].filter(t=>wl.has(t))):wl; }
   let recs=nearestTo(target,12,excl,allowed);
-  let head='Recommended'; if(g) head+=' &middot; '+g; if(wlOnly) head+=' &middot; from watchlist'; if(neg.length) head+=' &middot; away from '+neg.length+' not-for-me';
+  let head='Recommended'; if(g) head+=' &middot; '+g; if(wlOnly) head+=' &middot; from watchlist'; if(neg.length) head+=' &middot; away from '+neg.length+' you rejected';
   if(Object.keys(push).length) head+=' &middot; tuned to your reasons';
   if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
   $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs,target);
