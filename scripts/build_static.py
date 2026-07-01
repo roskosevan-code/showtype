@@ -45,7 +45,10 @@ const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.l
 const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
 const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
 const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${r}">${em}</button>`).join('')+'</span>';};
-const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t];return '<span class="wx">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';};
+const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t],cw=WATCH.find(w=>w[0]===cur);
+  const tog=`<button class="wxtog${cur?' set':''}" data-wxtog="${e}" title="${cw?cw[2]:'Watch status'}">${cw?cw[1]:'&#9662;'}</button>`;
+  const grp='<span class="wxg">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';
+  return `<span class="wx">${tog}${grp}</span>`;};
 function whyText(v,ref){
   const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
   const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
@@ -107,18 +110,22 @@ function complaintRow(t){
   return `<div class="rsn" data-t="${e}">`+COMPLAINTS.map(([k,lbl])=>`<button class="rsnb${cur.includes(k)?' on':''}" data-rsn="${k}" data-t="${e}">${lbl}</button>`).join('')+'</div>';
 }
 function renderChips(){
-  const ts=Object.keys(reactions);
+  const reacted=Object.keys(reactions);
+  const droppedOnly=Object.keys(watch).filter(t=>watch[t]==='dropped'&&!reactions[t]);
   const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
   const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!ts.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
+  if(!reacted.length&&!droppedOnly.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#128077;&#128528;&#128078; on any show.</span>'; return; }
   const ord={loved:0,liked:1,fine:2,nope:3}, em=r=>RX.find(x=>x[0]===r)[1];
-  ts.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
-  $('#chips').innerHTML=head+ts.map(t=>{
+  reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
+  droppedOnly.sort((a,b)=>a.localeCompare(b));
+  const items=[...reacted.map(t=>({t,emo:em(reactions[t]),neg:reactions[t]==='nope',rm:'rm'})),
+               ...droppedOnly.map(t=>({t,emo:'&#128682;',neg:true,rm:'rmw'}))];
+  $('#chips').innerHTML=head+items.map(({t,emo,neg,rm})=>{
     const e=encodeURIComponent(t);
-    let s=`<span class="chip">${em(reactions[t])} ${t}`;
-    if(reactions[t]==='nope'){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
-    s+=`<b data-rm="${e}">&times;</b></span>`;
-    if(reactions[t]==='nope') s+=complaintRow(t);
+    let s=`<span class="chip">${emo} ${t}`;
+    if(neg){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
+    s+=`<b data-${rm}="${e}">&times;</b></span>`;
+    if(neg) s+=complaintRow(t);
     return s;
   }).join('');
 }
@@ -179,9 +186,11 @@ document.addEventListener('click',e=>{
   const rt=e.target.closest('.rsn-t'); if(rt){ const p=$('#chips .rsn[data-t="'+rt.dataset.rt+'"]'); if(p) p.classList.toggle('open'); return; }
   const rb=e.target.closest('.rsnb'); if(rb){ const t=decodeURIComponent(rb.dataset.t),k=rb.dataset.rsn,cur=reasons[t]||[]; reasons[t]=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]; const n=reasons[t].length; if(!n) delete reasons[t]; saveReasons(); rb.classList.toggle('on'); const tag=document.querySelector('#chips .rsn-t[data-rt="'+rb.dataset.t+'"]'); if(tag) tag.innerHTML=n?('why&middot;'+n):'why'; if($('#recs').innerHTML) recommend(); return; }
   const rx=e.target.closest('.rxb'); if(rx){ setReaction(decodeURIComponent(rx.dataset.t),rx.dataset.rx); return; }
+  const wt=e.target.closest('.wxtog'); if(wt){ wt.closest('.wx').classList.toggle('open'); return; }
   const wx=e.target.closest('.wxb'); if(wx){ setWatch(decodeURIComponent(wx.dataset.t),wx.dataset.wx); return; }
   const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
-  const x=e.target.closest('.chip b[data-rm]'); if(x){ const t=decodeURIComponent(x.dataset.rm); delete reactions[t]; delete reasons[t]; saveReactions(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
+  const x=e.target.closest('.chip b[data-rm]'); if(x){ const t=decodeURIComponent(x.dataset.rm); delete reactions[t]; delete reasons[t]; saveReactions(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); return; }
+  const xw=e.target.closest('.chip b[data-rmw]'); if(xw){ const t=decodeURIComponent(xw.dataset.rmw); delete watch[t]; delete reasons[t]; saveWatch(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
 });
 $('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
 $('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });

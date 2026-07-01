@@ -42,14 +42,20 @@ Quick resume note (last updated after Phase 4 ②③).
 Both are mirrored in the offline build (`scripts/build_static.py` → `docs/taste-index.html`);
 served + offline centroids verified identical.
 
+## Polish done (after ②③)
+
+- **#1 Row de-clutter.** The three watch-state buttons collapsed into a single `▾`
+  disclosure per row (shows the chosen state's icon in accent colour when set; reveals
+  the three options on click). Rows went from ~7 controls to ~5.
+- **#3 Reasons on bounced.** 🚪 bounced shows now appear as chips in the taste panel even
+  without a 👎, each with the "why I bounced" editor; their reasons feed the axis pushes
+  and they're excluded from recs. (Engine already honoured `dropped` reasons.)
+
 ## Next up — ideas (nothing agreed yet)
 
-- Polish/UX pass on the new watch-state controls (7 tiny buttons per row is a lot — could
-  hide watch-state behind a disclosure, or a compact menu).
 - A dedicated **watchlist view** (currently surfaced only via the toggle + a count line).
-- Possibly let "why I bounced" reasons attach to 🚪 bounced shows even without a 👎 (the
-  engine already honours reasons on `dropped` shows; the chip editor only shows on 👎).
 - Tune the push magnitudes (±1.5 step, ±3 cap) against real usage.
+- Bigger: grow the catalog past 753, or publish the offline HTML (e.g. GitHub Pages).
 
 Design principle settled: **user thinks in words, engine thinks in weights**; keep ≤5
 options at the top level and push richer vocabulary one layer down (progressive disclosure).
