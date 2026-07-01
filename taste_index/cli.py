@@ -99,6 +99,33 @@ def cmd_score(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export_catalog(args: argparse.Namespace) -> int:
+    """Dump every stored axis score to a catalog CSV (the inverse of backfill).
+
+    `score-batch` writes into the DB; this regenerates docs/catalog-scores.csv
+    so the committed data (which rebuilds the DB from scratch) stays in sync.
+    """
+    conn = db.connect(args.db)
+    rows = conn.execute(
+        "SELECT sh.title AS show, a.name AS axis, s.value AS value, "
+        "s.confidence AS confidence, s.justification AS justification, s.model AS model "
+        "FROM score s JOIN show sh ON sh.id = s.show_id JOIN axis a ON a.id = s.axis_id "
+        "ORDER BY sh.title COLLATE NOCASE, a.id"
+    ).fetchall()
+    if not rows:
+        print("No scores in the DB to export.", file=sys.stderr)
+        return 1
+    with open(args.csv, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["show", "axis", "value", "confidence", "justification", "model"])
+        for r in rows:
+            w.writerow([r["show"], r["axis"], r["value"], r["confidence"],
+                        r["justification"], r["model"]])
+    n_shows = len({r["show"] for r in rows})
+    print(f"Exported {n_shows} shows / {len(rows)} scores -> {args.csv}.")
+    return 0
+
+
 def cmd_backfill(args: argparse.Namespace) -> int:
     conn = db.connect(args.db)
     axis_rows = db.get_axes(conn)
@@ -509,6 +536,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("backfill", help="load baseline scores from a CSV into the DB")
     sp.add_argument("--csv", default=DEFAULT_BASELINE_CSV)
     sp.set_defaults(func=cmd_backfill)
+
+    sp = sub.add_parser("export-catalog", help="dump DB scores to a catalog CSV (inverse of backfill)")
+    sp.add_argument("--csv", default=DEFAULT_CATALOG_CSV)
+    sp.set_defaults(func=cmd_export_catalog)
 
     sp = sub.add_parser("diff", help="re-score live and diff against the stored baseline")
     sp.add_argument("titles", nargs="+")

@@ -10,6 +10,7 @@ unsure). Written to docs/quality.csv; load with `taste-index load-quality`.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -73,7 +74,7 @@ def all_titles() -> list[str]:
     for r in csv.DictReader(open(CATALOG_CSV, encoding="utf-8")):
         if r["show"] not in seen:
             seen.append(r["show"])
-    # include round-3 additions even if the catalog CSV hasn't been re-exported yet
+    # include additions even if the catalog CSV hasn't been re-exported yet
     for f in REPO.glob("scripts/catalog-shows*.txt"):
         for t in _collect_titles([], str(f)):
             if t not in seen:
@@ -81,8 +82,28 @@ def all_titles() -> list[str]:
     return seen
 
 
+def _existing_rows() -> list[dict]:
+    if not OUT.exists():
+        return []
+    return list(csv.DictReader(open(OUT, encoding="utf-8")))
+
+
 def main() -> int:
-    titles = all_titles()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--file", help="score only titles in this file (default: whole catalog)")
+    ap.add_argument("--skip-existing", action="store_true",
+                    help="skip titles already present in docs/quality.csv (incremental)")
+    ap.add_argument("--poll-interval", type=int, default=30)
+    args = ap.parse_args()
+
+    titles = _collect_titles([], args.file) if args.file else all_titles()
+    prior = _existing_rows()
+    if args.skip_existing:
+        done = {r["show"] for r in prior}
+        titles = [t for t in titles if t not in done]
+    if not titles:
+        print("Nothing to assess.")
+        return 0
     print(f"Assessing quality for {len(titles)} shows...", file=sys.stderr)
     cid = {f"q{i:04d}": t for i, t in enumerate(titles)}
     requests = [
@@ -115,13 +136,19 @@ def main() -> int:
         except Exception as e:
             failed.append(f"{title} ({e})")
 
-    out_rows.sort(key=lambda r: r["show"])
+    # Merge new results with any prior rows (new rows win for the same show), so
+    # an incremental run never drops shows already assessed.
+    merged = {r["show"]: r for r in prior}
+    for r in out_rows:
+        merged[r["show"]] = r
+    rows = sorted(merged.values(), key=lambda r: r["show"])
     with open(OUT, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["show", "quality", "quality_reason", "summary",
                                           "episodes", "seasons"])
         w.writeheader()
-        w.writerows(out_rows)
-    print(f"Wrote {len(out_rows)} rows -> {OUT.relative_to(REPO)}.")
+        w.writerows(rows)
+    print(f"Wrote {len(out_rows)} new + {len(prior)} prior = {len(rows)} rows -> "
+          f"{OUT.relative_to(REPO)}.")
     if failed:
         print(f"Failed ({len(failed)}): {', '.join(map(str, failed[:20]))}", file=sys.stderr)
     return 0
