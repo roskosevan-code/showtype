@@ -4,9 +4,9 @@ Quick resume note (last updated after round-4 validation slice folded in).
 
 ## State of the project
 
-- **Catalog: 957 shows** (753 base + the 204-title round-4 validation slice), each with
-  8 descriptive axis scores, ≥1 genre, and a quality layer (execution score 0–10 + reason,
-  summary, approx episode/season counts).
+- **Catalog: 1863 shows** (753 base + 204 round-4 validation + 906 round-4 main expansion),
+  each with 8 descriptive axis scores, ≥1 genre, and a quality layer (execution score 0–10 +
+  reason, summary, approx episode/season counts).
 - **Data files** (all committed; the DB is rebuilt from these):
   - `docs/rubric.md` — the 8-axis rubric (source of truth)
   - `docs/catalog-scores.csv` — 753 shows × 8 axes
@@ -69,14 +69,16 @@ served + offline centroids verified identical.
   (`messages.create`, reusing `params()` from the batch scripts). All three passes now
   204/204; DB scores exported back to `docs/catalog-scores.csv` via `export-catalog`.
   Lesson: **don't panic at 0 succeeded — let batches end, or cancel to force a flush.**
-- **Main expansion (1110 titles after dedup, `scripts/catalog-shows-4.txt`): SUBMITTED,
-  in flight.** 906 new per pass (204 validation titles skipped). Batch IDs recorded in
-  `docs/round4-main-batches.json` (scores/genres/quality). **To resume:** poll them, then
-  `python3 scripts/fetch_batches.py --file scripts/catalog-shows-4.txt --scores <id>
-  --genres <id> --quality <id>`, live-patch any canceled/failed stragglers, then
-  `export-catalog` + `build_static.py`. Submitted via `scripts/submit_batches.py` (submit +
-  record IDs only, no block-poll). Note `build_quality.py`/`classify_genres.py` are
-  batch-only (no live flag); scores have a live path (`score-all`).
+- **Main expansion (1110 titles, `scripts/catalog-shows-4.txt`): DONE.** 906 new per pass.
+  Batches sat at 0-succeeded again; cancel-to-flush recovered ~95% (865/873/864 of 906), and
+  the 41/33/45 canceled/failed stragglers were live-patched — all three passes now 1110/1110.
+  Batch IDs are in `docs/round4-main-batches.json`. Dropped 3 orphan quality rows (garbled/
+  non-catalog `show` names from `_resolve` fallback) to restore CSV parity (all three = 1863).
+- **Fixed a latent offline-build bug:** `scripts/build_static.py:ensure_db` used to skip
+  genres/quality loading whenever the `show` table was non-empty — but scores get written to
+  the DB directly (score-all/fetch_batches) while genres+quality land only in the CSVs, so
+  new shows shipped with empty genres/null quality. Now it always reloads all CSVs (loaders
+  are idempotent). The pre-fix 957-show HTML had this gap too.
 
 ## Next up — ideas (nothing agreed yet)
 

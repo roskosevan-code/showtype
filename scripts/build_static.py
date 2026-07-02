@@ -246,9 +246,12 @@ def build_data(conn) -> dict:
 
 
 def ensure_db(conn) -> None:
+    # Always (re)load from the committed CSVs. A populated `show` table does NOT
+    # imply genres/quality are current: scores can be written straight to the DB
+    # (e.g. score-all / fetch_batches) while genres+quality land only in the CSVs,
+    # so an early return here would ship shows with empty genres/null quality.
+    # All loaders are idempotent (upsert scores/quality; tag_genres clears per show).
     db.init_schema(conn)
-    if conn.execute("SELECT COUNT(*) FROM show").fetchone()[0]:
-        return
     ns = lambda **k: argparse.Namespace(**k)  # noqa: E731
     cli.cmd_init_db(ns(db=str(DB), rubric=str(REPO / "docs/rubric.md")))
     cli.cmd_backfill(ns(db=str(DB), csv=str(REPO / "docs/catalog-scores.csv")))
