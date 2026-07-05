@@ -88,10 +88,3 @@ served + offline centroids verified identical.
 
 Design principle settled: **user thinks in words, engine thinks in weights**; keep ≤5
 options at the top level and push richer vocabulary one layer down (progressive disclosure).
-
-## Loose end
-
-- ⚠️ **Rotate the API key (again).** The original key was pasted into chat and used for the
-  early batches. A fresh key was created for the round-4 recovery — but it was *also* pasted
-  into chat, so it's exposed too. Rotate it at console.anthropic.com and disable the old one.
-  Nothing in the repo stores any key.
