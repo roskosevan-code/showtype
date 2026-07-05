@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Build a single self-contained docs/taste-index.html — no server, no deps.
 
-Bakes every show's data into the page and reimplements similarity, recommendation
-(centroid + Rocchio dislike), genre filtering, and axis-profile query in client-side
-JS. Reuses the CSS + markup from taste_index.web.PAGE so it matches the served UI.
+Bakes every show's data into the page and provides a local-compute ENGINE with
+the same interface the served UI's fetch-based engine exposes (meta / show /
+similar / recommend / query). All markup, CSS, and UI logic are reused verbatim
+from taste_index.web (PAGE_HEAD + UI_JS), so the two builds cannot drift.
 
     python3 scripts/build_static.py     # -> docs/taste-index.html (double-click to open)
 """
@@ -28,200 +29,53 @@ from taste_index import cli, db, space, web  # noqa: E402
 DB = REPO / "taste_index.db"
 OUT = REPO / "docs" / "taste-index.html"
 
-# Client-side reimplementation of the API logic over the embedded DATA blob.
-STATIC_JS = r"""
-const AXES=DATA.axes, GENRES=DATA.genres, SHOWS=DATA.shows;
-const TITLES=Object.keys(SHOWS).sort();
-// Single affinity ranking, best -> worst (see taste_index/web.py for the rationale).
-const RX=[['loved','❤️','Loved'],['liked','👍','Liked'],['nope','🙅','Never interested'],['dropped','⏹️','Started & stopped']];
-const WATCH=[['watchlist','🔖','Watchlist'],['seen','👁','Seen']];
-const COMPLAINTS=[['slow','Too slow',{1:1}],['dense','Hard to follow',{7:-1}],['cold',"Couldn't connect",{4:1}],['tryhard','Too try-hard',{5:-1}],['unreal',"Didn't buy it",{6:1}],['corny','Too corny',{8:-1,6:1}]];
-const PUSH_STEP=1.5, PUSH_CAP=3;
-let reactions=JSON.parse(localStorage.getItem('ti-reactions')||'{}');
-let watch=JSON.parse(localStorage.getItem('ti-watch')||'{}');
-let reasons=JSON.parse(localStorage.getItem('ti-reasons')||'{}');
-const saveReactions=()=>localStorage.setItem('ti-reactions',JSON.stringify(reactions));
-const saveWatch=()=>localStorage.setItem('ti-watch',JSON.stringify(watch));
-const saveReasons=()=>localStorage.setItem('ti-reasons',JSON.stringify(reasons));
-// Migrate the old model: 🚪 bounced watch-state -> ⏹️ reaction; a reasoned 👎
-// (watched & disliked) -> ⏹️; drop the retired 😐 fine.
-(function(){let m=false;
-  for(const t in watch){ if(watch[t]==='dropped'){ if(!reactions[t]) reactions[t]='dropped'; delete watch[t]; m=true; } }
-  for(const t in reactions){ if(reactions[t]==='nope'&&(reasons[t]||[]).length){ reactions[t]='dropped'; m=true; } else if(reactions[t]==='fine'){ delete reactions[t]; m=true; } }
-  if(m){ saveReactions(); saveWatch(); }})();
-const $=s=>document.querySelector(s);
-
+# Local-compute twin of web.SERVED_ENGINE_JS, over the embedded DATA blob.
+# Same five async methods; the mirrored recommend logic (weighted centroid +
+# Rocchio negatives + clamped axis pushes) lives in space.recommend server-side.
+STATIC_ENGINE_JS = r"""
+const TITLES_ALL=Object.keys(DATA.shows).sort((a,b)=>a.localeCompare(b));
 const dist=(a,b)=>Math.sqrt(a.reduce((s,v,i)=>s+(v-b[i])**2,0));
-const genresOf=t=>(SHOWS[t]?SHOWS[t].genres:[]);
-const showsWithGenre=g=>TITLES.filter(t=>genresOf(t).includes(g));
-const centroid=ts=>AXES.map((_,i)=>ts.reduce((s,t)=>s+SHOWS[t].values[i],0)/ts.length);
-const gbadges=gs=>(gs||[]).map(g=>`<span class="badge">${g}</span>`).join('');
-const qbadge=q=>(q!=null)?`<span class="qb" title="Execution score">Q${q}</span>`:'';
-const rxBtns=t=>{const e=encodeURIComponent(t),cur=reactions[t];return '<span class="rx">'+RX.map(([r,em,lbl])=>`<button class="rxb${cur===r?' on':''}" data-rx="${r}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';};
-const wxBtns=t=>{const e=encodeURIComponent(t),cur=watch[t],cw=WATCH.find(w=>w[0]===cur);
-  const tog=`<button class="wxtog${cur?' set':''}" data-wxtog="${e}" title="${cw?cw[2]:'Watch status'}">${cw?cw[1]:'&#9662;'}</button>`;
-  const grp='<span class="wxg">'+WATCH.map(([w,em,lbl])=>`<button class="wxb${cur===w?' on':''}" data-wx="${w}" data-t="${e}" title="${lbl}">${em}</button>`).join('')+'</span>';
-  return `<span class="wx">${tog}${grp}</span>`;};
-function whyText(v,ref){
-  const d=AXES.map((a,i)=>({n:a.name,gap:Math.abs(v[i]-ref[i]),v:v[i],r:Math.round(ref[i])}));
-  const near=d.slice().sort((a,b)=>a.gap-b.gap).slice(0,3).map(x=>x.n);
-  const far=d.slice().sort((a,b)=>b.gap-a.gap)[0];
-  let s='Aligns on <b>'+near.join('</b>, <b>')+'</b>';
-  if(far.gap>=3) s+=' &middot; differs on <b>'+far.n+'</b> ('+far.v+' vs ~'+far.r+')';
-  return s;
-}
-function rowItem(title,genres,quality,tail,why){
-  const e=encodeURIComponent(title);
-  return `<li><div class="nrow"><span><button class="lk" data-t="${e}">${title}</button>${gbadges(genres)}${qbadge(quality)}</span><span class="racts">${rxBtns(title)}${wxBtns(title)}${why?'<button class="act why-t" title="Why?">?</button>':''}${tail||''}</span></div>${why?`<div class="why" hidden>${why}</div>`:''}</li>`;
-}
-
-function bars(values){
-  return '<div class="axes">'+AXES.map((a,i)=>{const v=values[i];
-    return `<div class="ax"><span class="lbl">${a.name}</span><span class="bar"><span style="width:${v*10}%"></span></span><span class="v">${v}</span></div>`;}).join('')+'</div>';
-}
-function neighborList(items,ref){
-  if(!items.length) return '<div class="dist">No matches.</div>';
-  return '<ul class="list">'+items.map(it=>rowItem(it.title,it.genres,it.quality,`<span class="dist">${it.distance}</span>`, ref?whyText(it.values,ref):'')).join('')+'</ul>';
-}
+const genresOf=t=>(DATA.shows[t]?DATA.shows[t].genres:[]);
+const showsWithGenre=g=>TITLES_ALL.filter(t=>genresOf(t).includes(g));
 function nearestTo(vec,n,exclude,allowed){
-  return TITLES.filter(t=>!exclude.has(t)&&(!allowed||allowed.has(t)))
-    .map(t=>({title:t,distance:+dist(vec,SHOWS[t].values).toFixed(2),genres:genresOf(t),quality:SHOWS[t].quality,values:SHOWS[t].values}))
+  return TITLES_ALL.filter(t=>!exclude.has(t)&&(!allowed||allowed.has(t)))
+    .map(t=>({title:t,distance:+dist(vec,DATA.shows[t].values).toFixed(2),
+      genres:genresOf(t),quality:DATA.shows[t].quality,values:DATA.shows[t].values}))
     .sort((a,b)=>a.distance-b.distance).slice(0,n);
 }
-function loadShow(title){
-  if(!SHOWS[title]){ $('#profile').innerHTML='<div class="err">Unknown show.</div>'; return; }
-  $('#pick').value=title;
-  const s=SHOWS[title];
-  let allowed=null;
-  if($('#simSameGenre').checked){ allowed=new Set(); genresOf(title).forEach(g=>showsWithGenre(g).forEach(t=>allowed.add(t))); }
-  const neighbors=nearestTo(s.values,8,new Set([title]),allowed);
-  let html=`<div style="margin:8px 0 2px">${gbadges(s.genres)}${qbadge(s.quality)} ${rxBtns(title)}${wxBtns(title)}</div>`;
-  if(s.summary) html+=`<div class="summary">${s.summary}</div>`;
-  const meta=[]; if(s.episodes) meta.push('&approx;'+s.episodes+' episodes'); if(s.seasons) meta.push(s.seasons+' season'+(s.seasons===1?'':'s'));
-  if(meta.length) html+=`<div class="metaline">${meta.join(' &middot; ')}</div>`;
-  html+=bars(s.values);
-  html+=s.scores.map(x=>`<div class="just"><b>${x.axis} ${x.value}</b> &middot; ${x.justification} <i>(${x.confidence})</i></div>`).join('');
-  if(s.quality!=null) html+=`<div class="qblock"><b>Execution ${s.quality}/10</b> &middot; ${s.quality_reason||''}</div>`;
-  html+='<h2 style="margin-top:16px">Nearest in taste-space</h2>'+neighborList(neighbors,s.values);
-  $('#profile').innerHTML=html;
-}
-
-function setReaction(t,r){
-  if(reactions[t]===r) delete reactions[t]; else reactions[t]=r;
-  saveReactions(); renderChips();
-  if($('#pick').value) loadShow($('#pick').value);
-  if($('#recs').innerHTML) recommend();
-}
-function setWatch(t,w){
-  if(watch[t]===w) delete watch[t]; else watch[t]=w;
-  saveWatch(); renderChips();
-  if($('#pick').value) loadShow($('#pick').value);
-  if($('#recs').innerHTML) recommend();
-}
-function complaintRow(t){
-  const e=encodeURIComponent(t), cur=reasons[t]||[];
-  return `<div class="rsn" data-t="${e}">`+COMPLAINTS.map(([k,lbl])=>`<button class="rsnb${cur.includes(k)?' on':''}" data-rsn="${k}" data-t="${e}">${lbl}</button>`).join('')+'</div>';
-}
-function renderChips(){
-  const reacted=Object.keys(reactions);
-  const wl=Object.keys(watch).filter(t=>watch[t]==='watchlist');
-  const head=wl.length?`<div class="hint" style="margin:0 0 8px">&#128278; ${wl.length} on your watchlist</div>`:'';
-  if(!reacted.length){ $('#chips').innerHTML=head+'<span class="dist">No reactions yet — use the &#10084;&#65039;&#128077;&#128581;&#9209;&#65039; on any show.</span>'; return; }
-  const ord={loved:0,liked:1,nope:2,dropped:3}, em=r=>RX.find(x=>x[0]===r)[1];
-  reacted.sort((a,b)=>(ord[reactions[a]]-ord[reactions[b]])||a.localeCompare(b));
-  // Only "Started & stopped" (⏹️) carries the "why it didn't land" reason editor.
-  const items=reacted.map(t=>({t,emo:em(reactions[t]),why:reactions[t]==='dropped'}));
-  $('#chips').innerHTML=head+items.map(({t,emo,why})=>{
-    const e=encodeURIComponent(t);
-    let s=`<span class="chip">${emo} ${t}`;
-    if(why){ const n=(reasons[t]||[]).length; s+=`<b class="rsn-t" data-rt="${e}" title="Why it didn't land">${n?'why&middot;'+n:'why'}</b>`; }
-    s+=`<b data-rm="${e}">&times;</b></span>`;
-    if(why) s+=complaintRow(t);
-    return s;
-  }).join('');
-}
-function collectPushes(){
-  const push={};
-  const add=t=>(reasons[t]||[]).forEach(k=>{ const c=COMPLAINTS.find(x=>x[0]===k); if(c) for(const a in c[2]) push[a]=(push[a]||0)+c[2][a]*PUSH_STEP; });
-  for(const t in reactions) if(reactions[t]==='dropped'&&(reasons[t]||[]).length) add(t);
-  for(const a in push) push[a]=Math.max(-PUSH_CAP,Math.min(PUSH_CAP,push[a]));
-  return push;
-}
-function recommend(){
-  const W={loved:2,liked:1};
-  const pos=[], neg=[];
-  for(const t in reactions){ if(!SHOWS[t]) continue; const r=reactions[t];
-    if(r==='loved'||r==='liked') pos.push([t,W[r]]);
-    else if(r==='nope') neg.push(t);                                 // never interested: blunt push
-    else if(r==='dropped'&&!(reasons[t]||[]).length) neg.push(t);    // started&stopped, no reasons: blunt push
-    // dropped w/ reasons: steers via collectPushes(); excluded below via `excl`.
-  }
-  if(!pos.length){ $('#recs').innerHTML='<div class="dist">React to a few shows you liked first (&#10084;&#65039; or &#128077;).</div>'; return; }
-  const wlOnly=$('#wlOnly').checked;
-  if(wlOnly && !Object.keys(watch).some(t=>watch[t]==='watchlist')){ $('#recs').innerHTML='<div class="dist">Nothing on your watchlist yet — mark shows with &#128278;.</div>'; return; }
-  const wsum=pos.reduce((s,[,w])=>s+w,0);
-  const cl=AXES.map((_,i)=>pos.reduce((s,[t,w])=>s+w*SHOWS[t].values[i],0)/wsum);
-  let target=cl.slice();
-  if(neg.length){ const cd=AXES.map((_,i)=>neg.reduce((s,t)=>s+SHOWS[t].values[i],0)/neg.length); target=cl.map((v,i)=>v+0.5*(v-cd[i])); }
-  const push=collectPushes();
-  for(const a in push) target[+a-1]+=push[a];  // axis id is 1-based
-  target=target.map(v=>Math.min(10,Math.max(0,v)));
-  const excl=new Set(Object.keys(reactions));
-  for(const t in watch) if(watch[t]==='seen') excl.add(t);
-  const g=$('#recGenre').value;
-  let allowed=g?new Set(showsWithGenre(g)):null;
-  if(wlOnly){ const wl=new Set(Object.keys(watch).filter(t=>watch[t]==='watchlist')); allowed=allowed?new Set([...allowed].filter(t=>wl.has(t))):wl; }
-  let recs=nearestTo(target,12,excl,allowed);
-  let head='Recommended'; if(g) head+=' &middot; '+g; if(wlOnly) head+=' &middot; from watchlist'; if(neg.length) head+=' &middot; away from '+neg.length+' you rejected';
-  if(Object.keys(push).length) head+=' &middot; tuned to your reasons';
-  if($('#sortQ').checked){ head+=' &middot; by quality'; recs=recs.slice().sort((a,b)=>(b.quality??-1)-(a.quality??-1)); }
-  $('#recs').innerHTML=`<h2 style="margin-top:14px">${head}</h2>`+neighborList(recs,target);
-}
-
-function buildFilters(){
-  $('#filters').innerHTML=AXES.map(a=>`<div class="frow" data-axis="${a.id}"><span class="lbl">${a.name}</span><input type="range" min="0" max="10" value="0" data-kind="min"><input type="range" min="0" max="10" value="10" data-kind="max"><span class="frd" id="frd-${a.id}">0&ndash;10</span></div>`).join('');
-}
-function syncPair(el){
-  const row=el.closest('.frow'); const mn=row.querySelector('[data-kind=min]'),mx=row.querySelector('[data-kind=max]');
-  if(+mn.value>+mx.value){ if(el.dataset.kind==='min') mx.value=mn.value; else mn.value=mx.value; }
-  $('#frd-'+row.dataset.axis).innerHTML=mn.value+'&ndash;'+mx.value;
-}
-function runQuery(){
-  const fs=[...document.querySelectorAll('.frow')].map(r=>({id:+r.dataset.axis,min:+r.querySelector('[data-kind=min]').value,max:+r.querySelector('[data-kind=max]').value})).filter(s=>s.min>0||s.max<10);
-  const matches=TITLES.filter(t=>fs.every(s=>{const v=SHOWS[t].values[s.id-1]; return v>=s.min&&v<=s.max;}));
-  const shown=matches.slice(0,60);
-  const head=`${matches.length} show${matches.length===1?'':'s'} match`+(fs.length?'':' (no filter)');
-  let html=`<h2 style="margin-top:14px">${head}</h2><ul class="list">`+shown.map(t=>rowItem(t,genresOf(t),SHOWS[t].quality,'')).join('')+'</ul>';
-  if(matches.length>shown.length) html+=`<div class="dist">showing first ${shown.length}</div>`;
-  $('#filterResults').innerHTML=html;
-}
-
-document.addEventListener('click',e=>{
-  const w=e.target.closest('.why-t'); if(w){ const d=w.closest('li').querySelector('.why'); if(d) d.hidden=!d.hidden; return; }
-  const rt=e.target.closest('.rsn-t'); if(rt){ const p=$('#chips .rsn[data-t="'+rt.dataset.rt+'"]'); if(p) p.classList.toggle('open'); return; }
-  const rb=e.target.closest('.rsnb'); if(rb){ const t=decodeURIComponent(rb.dataset.t),k=rb.dataset.rsn,cur=reasons[t]||[]; reasons[t]=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]; const n=reasons[t].length; if(!n) delete reasons[t]; saveReasons(); rb.classList.toggle('on'); const tag=document.querySelector('#chips .rsn-t[data-rt="'+rb.dataset.t+'"]'); if(tag) tag.innerHTML=n?('why&middot;'+n):'why'; if($('#recs').innerHTML) recommend(); return; }
-  const rx=e.target.closest('.rxb'); if(rx){ setReaction(decodeURIComponent(rx.dataset.t),rx.dataset.rx); return; }
-  const wt=e.target.closest('.wxtog'); if(wt){ wt.closest('.wx').classList.toggle('open'); return; }
-  const wx=e.target.closest('.wxb'); if(wx){ setWatch(decodeURIComponent(wx.dataset.t),wx.dataset.wx); return; }
-  const lk=e.target.closest('.lk'); if(lk){ loadShow(decodeURIComponent(lk.dataset.t)); return; }
-  const x=e.target.closest('.chip b[data-rm]'); if(x){ const t=decodeURIComponent(x.dataset.rm); delete reactions[t]; delete reasons[t]; saveReactions(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); return; }
-  const xw=e.target.closest('.chip b[data-rmw]'); if(xw){ const t=decodeURIComponent(xw.dataset.rmw); delete watch[t]; delete reasons[t]; saveWatch(); saveReasons(); renderChips(); if($('#pick').value) loadShow($('#pick').value); if($('#recs').innerHTML) recommend(); }
-});
-$('#pick').addEventListener('change',e=>{ if(e.target.value) loadShow(e.target.value); });
-$('#simSameGenre').addEventListener('change',()=>{ if($('#pick').value) loadShow($('#pick').value); });
-$('#addReact').addEventListener('click',()=>{ const v=$('#reactInput').value.trim(); if(v&&SHOWS[v]){ if(!reactions[v]){ reactions[v]='liked'; saveReactions(); } loadShow(v); renderChips(); } $('#reactInput').value=''; });
-$('#reactInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#addReact').click(); });
-$('#recBtn').addEventListener('click',recommend);
-$('#sortQ').addEventListener('change',()=>{ if($('#recs').innerHTML) recommend(); });
-$('#wlOnly').addEventListener('change',()=>{ if($('#recs').innerHTML) recommend(); });
-$('#clearBtn').addEventListener('click',()=>{ reactions={}; reasons={}; saveReactions(); saveReasons(); renderChips(); $('#recs').innerHTML=''; if($('#pick').value) loadShow($('#pick').value); });
-$('#filters').addEventListener('input',e=>{ if(e.target.type==='range') syncPair(e.target); });
-$('#applyFilter').addEventListener('click',runQuery);
-$('#resetFilter').addEventListener('click',()=>{ document.querySelectorAll('.frow').forEach(r=>{ r.querySelector('[data-kind=min]').value=0; r.querySelector('[data-kind=max]').value=10; $('#frd-'+r.dataset.axis).innerHTML='0&ndash;10'; }); $('#filterResults').innerHTML=''; });
-
-$('#shows').innerHTML=TITLES.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('');
-$('#recGenre').innerHTML='<option value="">All genres</option>'+GENRES.map(g=>`<option value="${g}">${g}</option>`).join('');
-renderChips(); buildFilters();
+const ENGINE={
+  meta:async()=>({axes:DATA.axes,genres:DATA.genres,titles:TITLES_ALL}),
+  show:async t=>{const s=DATA.shows[t];if(!s)throw new Error('Unknown show: '+t);
+    return Object.assign({title:t},s);},
+  similar:async(t,n,sameGenre)=>{
+    const s=DATA.shows[t];if(!s)throw new Error('Unknown show: '+t);
+    let allowed=null;
+    if(sameGenre){allowed=new Set();s.genres.forEach(g=>showsWithGenre(g).forEach(x=>allowed.add(x)));}
+    return{title:t,genres:s.genres,values:s.values,neighbors:nearestTo(s.values,n,new Set([t]),allowed)};},
+  recommend:async o=>{
+    const pos=[...o.loved.map(t=>[t,2]),...o.liked.map(t=>[t,1])].filter(([t])=>DATA.shows[t]);
+    const neg=o.nope.filter(t=>DATA.shows[t]);
+    if(!pos.length)throw new Error('no positives');
+    const wsum=pos.reduce((s,[,w])=>s+w,0);
+    const cl=DATA.axes.map((_,i)=>pos.reduce((s,[t,w])=>s+w*DATA.shows[t].values[i],0)/wsum);
+    let target=cl.slice();
+    if(neg.length){
+      const cd=DATA.axes.map((_,i)=>neg.reduce((s,t)=>s+DATA.shows[t].values[i],0)/neg.length);
+      target=cl.map((v,i)=>v+0.5*(v-cd[i]));
+    }
+    for(const a in o.push)target[+a-1]+=o.push[a];  // axis id is 1-based
+    target=target.map(v=>Math.min(10,Math.max(0,v)));
+    const excl=new Set([...o.loved,...o.liked,...o.nope,...o.seen]);
+    let allowed=o.genre?new Set(showsWithGenre(o.genre)):null;
+    if(o.only){const wl=new Set(o.only);allowed=allowed?new Set([...allowed].filter(t=>wl.has(t))):wl;}
+    return{disliked:neg.length,centroid:target.map(v=>+v.toFixed(1)),
+      recommendations:nearestTo(target,o.n||12,excl,allowed)};},
+  query:async fs=>{
+    const matches=TITLES_ALL.filter(t=>fs.every(s=>{
+      const v=DATA.shows[t].values[s.id-1];return v>=s.min&&v<=s.max;}));
+    return{count:matches.length,matches:matches.slice(0,60).map(t=>({
+      title:t,genres:genresOf(t),quality:DATA.shows[t].quality,values:DATA.shows[t].values}))};},
+};
 """
 
 
@@ -265,10 +119,16 @@ def main() -> int:
     ensure_db(conn)
     data = build_data(conn)
 
-    page = web.PAGE
-    head = page[: page.index("<script>")]  # everything up to the served JS
     blob = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-    html = f"{head}<script>\nconst DATA={blob};\n{STATIC_JS}\n</script>\n</body></html>"
+    html = (
+        web.PAGE_HEAD
+        + "<script>\nconst DATA="
+        + blob
+        + ";\n"
+        + STATIC_ENGINE_JS
+        + web.UI_JS
+        + "</script>\n</body></html>"
+    )
     OUT.write_text(html, encoding="utf-8")
     print(f"wrote {OUT.relative_to(REPO)}: {len(data['shows'])} shows, {len(html):,} bytes")
     return 0

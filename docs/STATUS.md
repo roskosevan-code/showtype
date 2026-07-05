@@ -58,6 +58,22 @@ served + offline centroids verified identical.
   without a 👎, each with the "why I bounced" editor; their reasons feed the axis pushes
   and they're excluded from recs. (Engine already honoured `dropped` reasons.)
 
+## Phase 5 — mobile-first UI redesign (2026-07-04)
+
+- **New layout:** three tabs — Explore / For You / Browse — with a fixed bottom tab bar on
+  mobile (pill nav on desktop ≥760px). Rows are now clean, full-width tap targets (title +
+  genres + Q + distance); tapping any row opens a **bottom sheet** (centered modal on
+  desktop) with the summary, big segmented ranking/watch buttons, "why didn't it land"
+  chips, and taste-profile bars. Custom search typeahead replaced `<datalist>`.
+  Browse filters auto-apply (debounced) instead of needing an Apply button. Same warm
+  dark palette, refined (16px base font, safe-area insets, 44px+ touch targets).
+- **De-duplicated the two builds:** `web.py` now exposes `PAGE_HEAD` (CSS+markup),
+  `SERVED_ENGINE_JS` (fetch adapters), and `UI_JS` (all rendering/state/events, shared).
+  `build_static.py` swaps in a local-compute `ENGINE` with the same 5-method interface
+  (meta/show/similar/recommend/query) and reuses PAGE_HEAD + UI_JS verbatim — UI changes
+  now land once instead of twice. Behavior (weights, Rocchio, pushes, migration of old
+  localStorage keys) is unchanged; storage keys still `ti-reactions`/`ti-watch`/`ti-reasons`.
+
 ## Round 4 — catalog expansion (in progress)
 
 - **Validation slice (204 titles, `scripts/catalog-shows-4-val.txt`): DONE.** Submitted as
