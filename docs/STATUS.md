@@ -1,6 +1,6 @@
 # Where we left off
 
-Quick resume note (last updated after round-4 validation slice folded in).
+Quick resume note (last updated after round-4 completed: catalog at 1863).
 
 ## State of the project
 
@@ -74,7 +74,7 @@ served + offline centroids verified identical.
   now land once instead of twice. Behavior (weights, Rocchio, pushes, migration of old
   localStorage keys) is unchanged; storage keys still `ti-reactions`/`ti-watch`/`ti-reasons`.
 
-## Round 4 — catalog expansion (in progress)
+## Round 4 — catalog expansion (complete)
 
 - **Validation slice (204 titles, `scripts/catalog-shows-4-val.txt`): DONE.** Submitted as
   3 Batches-API jobs (scores/genres/quality). The `succeeded` counter sat at 0 for 90 min —
@@ -100,7 +100,8 @@ served + offline centroids verified identical.
 
 - A dedicated **watchlist view** (currently surfaced only via the toggle + a count line).
 - Tune the push magnitudes (±1.5 step, ±3 cap) against real usage.
-- Bigger: grow the catalog past 753, or publish the offline HTML (e.g. GitHub Pages).
+- Bigger: a round-5 catalog expansion past 1863, or publish the offline HTML (e.g. GitHub
+  Pages — note it's ~5.1 MB now, so size is worth a thought first).
 
 Design principle settled: **user thinks in words, engine thinks in weights**; keep ≤5
 options at the top level and push richer vocabulary one layer down (progressive disclosure).
