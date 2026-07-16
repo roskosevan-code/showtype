@@ -44,11 +44,28 @@ tighten the rubric → refresh. The diff loop drove three rubric refinements (Re
 baseline agrees with the original hand-scores 96% within one point with no systematic
 skew. See **Usage** below.
 
-**Phase 2 — Use the coordinates (in progress).** The eight axes already form an
+**Phase 2 — Use the coordinates (complete).** The eight axes already form an
 interpretable vector space, so similarity is just distance in it. `similar` returns a
 show's nearest neighbours and `query` filters by axis profile — both over the stored
-scores, no API call. Next: scale the catalog with `score-all`. See
-[`docs/phase-2.md`](docs/phase-2.md).
+scores, no API call. Also brought recommendation, multi-genre filtering, the web UI, and
+the offline build. See [`docs/phase-2.md`](docs/phase-2.md).
+
+**Phase 3 — Quality layer (complete).** A model-judged execution score kept separate from
+the descriptive axes. See **Quality layer** below.
+
+**Phase 4 — Reactions (complete).** A single affinity ranking drives recommendation,
+watch-state is tracked separately, and "why didn't it land" reasons steer the result on
+specific axes. See **The web UI** below.
+
+**Phase 5 — Mobile-first UI (complete).** Three tabs (Explore / For You / Browse) with a
+bottom sheet for detail, and the served and offline builds de-duplicated onto one shared
+UI layer.
+
+**Catalog: 1863 shows**, each with 8 axis scores, ≥1 genre, and a quality row.
+
+[`docs/STATUS.md`](docs/STATUS.md) is the resume note — current state, what's next, and
+the lessons worth keeping. It's more current than this file; when the two disagree, trust
+STATUS.
 
 ## Usage
 
@@ -83,26 +100,36 @@ SQLite/zero-dependency regardless. Details in [`docs/postgres.md`](docs/postgres
 committed CSVs on first run — so from a fresh clone it's a single command, no API key and
 no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
 
-**No Python at all?** `docs/taste-index.html` is a single self-contained file (all 231
+**No Python at all?** `docs/taste-index.html` is a single self-contained file (all 1863
 shows baked in; similarity/recommendation/filter reimplemented in client-side JS) — just
 open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
 
-The **web UI** (`serve`, stdlib `http.server`, no deps) browses a show's axis profile +
-nearest neighbours and recommends from your **graded reactions** — react to any show with
-❤ loved / 👍 liked / 😐 fine / 👎 not-for-me, and the recommender builds a *weighted*
-taste centroid (Loved counts 2×, Liked 1×, Fine 0.4×) pushed away from not-for-me shows
-(Rocchio). Reactions persist in `localStorage`. A third panel **filters by axis profile**
-with min/max sliders per axis (e.g. Sweep 8–10 + Register 0–4 + Verisimilitude 8–10 → the
-restrained systems-storytelling cluster).
+The **web UI** (`serve`, stdlib `http.server`, no deps) is three tabs — **Explore** (a
+show's axis profile + nearest neighbours), **For You** (recommendations), and **Browse**
+(filter by axis profile with min/max sliders per axis, e.g. Sweep 8–10 + Register 0–4 +
+Verisimilitude 8–10 → the restrained systems-storytelling cluster). Tapping any row opens
+a bottom sheet (a centered modal on desktop ≥760px) with the summary, ranking and
+watch-state buttons, reason chips, and the taste profile.
 
-**Watch-state** (Phase 4 ②) is tracked separately from affinity: mark a show 🔖 watchlist,
-👁 seen, or 🚪 bounced. Seen and bounced shows are never recommended again; a "From my
-watchlist only" toggle ranks your own watchlist by taste fit. **"Why I bounced"** (Phase 4
-③) adds six everyday complaints under each 👎 — *too slow, hard to follow, couldn't connect,
-too try-hard, didn't buy it, too corny* — each mapping to a **masked per-axis push** (e.g.
-"too slow" nudges the Propulsion target up) so a dislike steers the recommendation on the
-axes you actually reacted to, not the whole vector. Watch-state and reasons persist in
-`localStorage` and are mirrored in the offline build.
+**Affinity** is a single ranking, best → worst: ❤️ loved / 👍 liked / 🙅 never-interested /
+⏹️ started-&-stopped. Loved and liked form a *weighted* taste centroid (loved 2×, liked 1×);
+the two negatives push away from it (Rocchio). Everything you've ranked is excluded from
+recommendations.
+
+**Watch-state** is tracked separately from affinity: 🔖 watchlist or 👁 seen (haven't-seen
+is simply unset). Seen shows are never recommended; a "From my watchlist only" toggle ranks
+your own watchlist by taste fit.
+
+**"Why didn't it land"** adds six everyday complaints under each ⏹️ started-&-stopped — *too
+slow, hard to follow, couldn't connect, too try-hard, didn't buy it, too corny* — each
+mapping to a **masked per-axis push** (e.g. "too slow" nudges the Propulsion target up) so a
+dislike steers the recommendation on the axes you actually reacted to, not the whole vector.
+Each complaint nudges its axis by ±1.5, summed across shows and capped at ±3 per axis; a
+reasoned dislike steers via these targeted pushes *instead of* the blunt centroid.
+Started-&-stopped is the only level that elicits reasons — never-interested is always blunt.
+
+All three (`ti-reactions` / `ti-watch` / `ti-reasons`) persist in `localStorage` and are
+mirrored in the offline build.
 
 **Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is
 primary) are categorical metadata — the axes are *structural*, so they don't encode
@@ -144,8 +171,8 @@ docs/
   phase0-scores.md              # (generated) Phase 0 per-show tables + Flags
   phase0-scores.csv             # (frozen) Phase 0 hand-scored spike, 240 rows
   baseline-scores.csv           # (generated) active diff baseline: gold set re-scored under current rubric
-  catalog-scores.csv            # (generated) 753-show catalog for retrieval; load with `backfill --csv`
-  genres.csv                    # show,genre,rank — curated (231) + model-classified; load with `tag-genres`
+  catalog-scores.csv            # (generated) 1863-show catalog for retrieval; load with `backfill --csv`
+  genres.csv                    # show,genre,rank — one or more genres per show; load with `tag-genres`
   quality.csv                   # (generated) model-judged quality + summary + episodes; load with `load-quality`
   postgres.md                   # optional PostgreSQL backend: setup, db-load, parity tests
   taste-index.html              # (generated) self-contained offline UI; open in any browser

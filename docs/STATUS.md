@@ -15,7 +15,7 @@ Quick resume note (last updated after round-4 validation slice folded in).
   - `docs/baseline-scores.csv` — 30-show diff reference
 - **App** (`taste_index/`): SQLite + retrieval (`space.py`) + zero-dep web UI (`web.py`).
   `python3 -m taste_index serve` auto-builds the DB from the CSVs and serves the UI.
-- **Offline UI**: `docs/taste-index.html` (self-contained, ~2.1 MB) — rebuild with
+- **Offline UI**: `docs/taste-index.html` (self-contained, ~5.1 MB) — rebuild with
   `python3 scripts/build_static.py`.
 
 ## Phases done
