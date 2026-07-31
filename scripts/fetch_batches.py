@@ -12,7 +12,8 @@ nothing was partially saved), each result is matched by the show name the model
 echoes back, normalized against the canonical titles in --file. All saves are
 idempotent, so running this is safe even if the original poller already saved some.
 
-    ANTHROPIC_API_KEY=... python3 scripts/fetch_batches.py \
+    export ANTHROPIC_API_KEY=...
+    python3 scripts/fetch_batches.py \
         --file scripts/catalog-shows-4-val.txt \
         --scores msgbatch_xxx --genres msgbatch_yyy --quality msgbatch_zzz
 """

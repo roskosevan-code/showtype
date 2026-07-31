@@ -5,7 +5,8 @@ This is the active diff reference: model-scored (claude-opus-4-8) under the
 current docs/rubric.md, so `showtype diff` measures drift from a clean,
 rubric-consistent baseline rather than the frozen Phase 0 hand-scores.
 
-    ANTHROPIC_API_KEY=... python3 scripts/refresh_baseline.py
+    export ANTHROPIC_API_KEY=...
+    python3 scripts/refresh_baseline.py
 
 The gold-set titles are read from docs/phase0-scores.csv so the same 30 shows
 are scored. Phase 0 artifacts are left untouched (historical spike snapshot).

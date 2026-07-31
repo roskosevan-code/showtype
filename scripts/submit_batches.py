@@ -5,7 +5,8 @@ Unlike score-batch / classify_genres.py / build_quality.py (which submit, block-
 and save in one process), this only *submits* and writes the batch IDs to a JSON file,
 so a dead session never loses them. Poll separately and fetch with fetch_batches.py.
 
-    ANTHROPIC_API_KEY=... python3 scripts/submit_batches.py \
+    export ANTHROPIC_API_KEY=...
+    python3 scripts/submit_batches.py \
         --file scripts/catalog-shows-4.txt --out batches.json
 """
 from __future__ import annotations

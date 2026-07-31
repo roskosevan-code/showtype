@@ -5,7 +5,8 @@ The original 231 genres in docs/genres.csv are hand-curated; for shows added in
 bulk, the model assigns 1-3 genres from the same controlled vocabulary. Results
 are appended to docs/genres.csv (show,genre,rank) for titles not already tagged.
 
-    ANTHROPIC_API_KEY=... python3 scripts/classify_genres.py --file scripts/catalog-shows-3.txt
+    export ANTHROPIC_API_KEY=...
+    python3 scripts/classify_genres.py --file scripts/catalog-shows-3.txt
 """
 from __future__ import annotations
 

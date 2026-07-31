@@ -6,7 +6,8 @@ distinct from the descriptive axes), a one-line justification, a spoiler-free
 summary, and approximate episode/season counts (its best estimate; null when
 unsure). Written to docs/quality.csv; load with `showtype load-quality`.
 
-    ANTHROPIC_API_KEY=... python3 scripts/build_quality.py
+    export ANTHROPIC_API_KEY=...
+    python3 scripts/build_quality.py
 """
 from __future__ import annotations
 
