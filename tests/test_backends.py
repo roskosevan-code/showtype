@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from taste_index import db, space
-from taste_index.cli import _int_or_none, _normalize
-from taste_index.rubric import load_rubric
+from showtype import db, space
+from showtype.cli import _int_or_none, _normalize
+from showtype.rubric import load_rubric
 
 REPO = Path(__file__).resolve().parent.parent
 RUBRIC = REPO / "docs" / "rubric.md"

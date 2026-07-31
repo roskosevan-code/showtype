@@ -1,4 +1,4 @@
-# The Taste Index — working notes
+# Show Type — working notes
 
 Eight-axis descriptive characterization of TV shows. `README.md` explains the axes and
 the CLI; this file covers what the README doesn't say.
@@ -10,8 +10,8 @@ the README disagree, STATUS wins.
 
 ```bash
 .venv/bin/python -m pytest -q          # tests — NOT `python3 -m pytest`
-python3 -m taste_index serve           # web UI at :8000; auto-builds the DB from CSVs
-python3 scripts/build_static.py        # rebuild docs/taste-index.html after data changes
+python3 -m showtype serve              # web UI at :8000; auto-builds the DB from CSVs
+python3 scripts/build_static.py        # rebuild docs/showtype.html after data changes
 ```
 
 `pytest` and `psycopg` live only in `.venv` and are absent from `pyproject.toml`, so the
@@ -28,12 +28,12 @@ never patch the output.
 | `axis` table + scorer context | `docs/rubric.md` | `init-db` |
 | `docs/phase0-scores.{md,csv}` | `scripts/gen_phase0.py` | `python3 scripts/gen_phase0.py` |
 | `docs/baseline-scores.csv` | the rubric + gold set | `python3 scripts/refresh_baseline.py` |
-| `docs/catalog-scores.csv` | the DB | `python3 -m taste_index export-catalog` |
-| `docs/taste-index.html` | the CSVs | `python3 scripts/build_static.py` |
+| `docs/catalog-scores.csv` | the DB | `python3 -m showtype export-catalog` |
+| `docs/showtype.html` | the CSVs | `python3 scripts/build_static.py` |
 
 When an axis mis-reads, revise the definition and anchors in `docs/rubric.md` — not
 `scorer.py`. The rubric self-corrected three times this way (Register ×2, Institutional
-Sweep ×1). `taste_index.db` is disposable and rebuilt from the committed CSVs.
+Sweep ×1). `showtype.db` is disposable and rebuilt from the committed CSVs.
 
 ## Gotchas
 

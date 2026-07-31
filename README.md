@@ -1,4 +1,4 @@
-# The Taste Index
+# Show Type
 
 A system for characterizing TV shows along eight descriptive axes, so they can be
 located, compared, and routed — not ranked. The axes are *descriptive, not
@@ -71,36 +71,36 @@ STATUS.
 
 ```bash
 pip install -e .                      # installs anthropic + pydantic
-python -m taste_index init-db         # create taste_index.db, seed the 8 axes from docs/rubric.md
-python -m taste_index axes            # list the seeded axes
-python -m taste_index backfill        # load the baseline scores (docs/baseline-scores.csv) into the DB
+python -m showtype init-db            # create showtype.db, seed the 8 axes from docs/rubric.md
+python -m showtype axes               # list the seeded axes
+python -m showtype backfill           # load the baseline scores (docs/baseline-scores.csv) into the DB
 
 export ANTHROPIC_API_KEY=sk-ant-...   # required for scoring
-python -m taste_index score "The Wire"   # score one show via the Claude API, store the result
-python -m taste_index score-all "Succession" "Mad Men" --skip-existing   # score new shows (sequential)
-python -m taste_index score-batch --file scripts/catalog-shows.txt --skip-existing  # scale via Batches API (50% cost)
-python -m taste_index show "The Wire"    # print stored scores for a show
-python -m taste_index diff "The Wire" "Severance"   # re-score live, diff vs the stored baseline (no save)
+python -m showtype score "The Wire"      # score one show via the Claude API, store the result
+python -m showtype score-all "Succession" "Mad Men" --skip-existing      # score new shows (sequential)
+python -m showtype score-batch --file scripts/catalog-shows.txt --skip-existing     # scale via Batches API (50% cost)
+python -m showtype show "The Wire"       # print stored scores for a show
+python -m showtype diff "The Wire" "Severance"      # re-score live, diff vs the stored baseline (no save)
 
 # Phase 2 — retrieval over the 8-axis space (no API calls):
-python -m taste_index similar "The Wire" -n 5                          # nearest shows in taste-space
-python -m taste_index query --where "sweep>=8" --where "register<=4"   # filter by axis profile
-python -m taste_index tag-genres                                       # load genres (docs/genres.csv)
-python -m taste_index serve                                            # web UI at http://127.0.0.1:8000
+python -m showtype similar "The Wire" -n 5                             # nearest shows in taste-space
+python -m showtype query --where "sweep>=8" --where "register<=4"      # filter by axis profile
+python -m showtype tag-genres                                          # load genres (docs/genres.csv)
+python -m showtype serve                                               # web UI at http://127.0.0.1:8000
 ```
 
 **Optional PostgreSQL backend.** By default everything runs on SQLite (zero
 dependencies). Set `DATABASE_URL` and the same commands run against PostgreSQL instead
 (via psycopg v3, imported only on that path): `pip install -e '.[postgres]'`, `export
-DATABASE_URL=postgresql://…`, then `python -m taste_index db-load` populates Postgres
+DATABASE_URL=postgresql://…`, then `python -m showtype db-load` populates Postgres
 from the committed CSVs in one step. The offline `scripts/build_static.py` output stays
 SQLite/zero-dependency regardless. Details in [`docs/postgres.md`](docs/postgres.md).
 
-**Just want the UI?** `python -m taste_index serve` auto-builds the database from the
+**Just want the UI?** `python -m showtype serve` auto-builds the database from the
 committed CSVs on first run — so from a fresh clone it's a single command, no API key and
 no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
 
-**No Python at all?** `docs/taste-index.html` is a single self-contained file (all 1863
+**No Python at all?** `docs/showtype.html` is a single self-contained file (all 1863
 shows baked in; similarity/recommendation/filter reimplemented in client-side JS) — just
 open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
 
@@ -175,15 +175,15 @@ docs/
   genres.csv                    # show,genre,rank — one or more genres per show; load with `tag-genres`
   quality.csv                   # (generated) model-judged quality + summary + episodes; load with `load-quality`
   postgres.md                   # optional PostgreSQL backend: setup, db-load, parity tests
-  taste-index.html              # (generated) self-contained offline UI; open in any browser
+  showtype.html                 # (generated) self-contained offline UI; open in any browser
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
   gen_genres.py                 # Author/validate docs/genres.csv (genre buckets -> flat CSV)
-  build_static.py               # Bake the catalog into a self-contained docs/taste-index.html
+  build_static.py               # Bake the catalog into a self-contained docs/showtype.html
   classify_genres.py            # Batches-API genre classifier for bulk-added shows
   build_quality.py              # Batches-API quality/summary/episode pass -> docs/quality.csv
-taste_index/                    # Phase 1 package
+showtype/                       # Phase 1 package
   rubric.py                     # parse the 8 axes out of docs/rubric.md
   schema.sql                    # axis / show / score tables (SQLite)
   schema_pg.sql                 # same schema for PostgreSQL (used when DATABASE_URL is set)

@@ -1,4 +1,4 @@
-# Catalog expansion, round 2 — for `taste-index score-batch --file`.
+# Catalog expansion, round 2 — for `showtype score-batch --file`.
 # ~100 more well-known shows, none overlapping the existing 124-show catalog.
 # One title per line; lines starting with # are ignored.
 

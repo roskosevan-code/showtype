@@ -25,9 +25,9 @@ sys.path.insert(0, str(REPO))
 
 import classify_genres as G  # noqa: E402
 import build_quality as Q  # noqa: E402
-from taste_index import db  # noqa: E402
-from taste_index.cli import _collect_titles, load_rubric, DEFAULT_RUBRIC  # noqa: E402
-from taste_index.scorer import build_batch_params  # noqa: E402
+from showtype import db  # noqa: E402
+from showtype.cli import _collect_titles, load_rubric, DEFAULT_RUBRIC  # noqa: E402
+from showtype.scorer import build_batch_params  # noqa: E402
 
 GENRES_CSV = REPO / "docs" / "genres.csv"
 QUALITY_CSV = REPO / "docs" / "quality.csv"

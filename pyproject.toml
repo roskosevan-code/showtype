@@ -3,9 +3,9 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "taste-index"
+name = "showtype"
 version = "0.1.0"
-description = "Eight-axis TV-show characterization (The Taste Index)."
+description = "Eight-axis TV-show characterization (Show Type)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -19,10 +19,10 @@ dependencies = [
 postgres = ["psycopg[binary]>=3"]
 
 [project.scripts]
-taste-index = "taste_index.cli:main"
+showtype = "showtype.cli:main"
 
 [tool.setuptools]
-packages = ["taste_index"]
+packages = ["showtype"]
 
 [tool.setuptools.package-data]
-taste_index = ["schema.sql", "schema_pg.sql"]
+showtype = ["schema.sql", "schema_pg.sql"]

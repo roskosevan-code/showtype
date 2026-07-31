@@ -10,9 +10,9 @@ space. Similarity is just distance in that space — no embeddings, no extra mod
 
 ## Done — retrieval layer
 
-- `taste_index/space.py`: vectors, Euclidean distance, k-NN, and profile query.
-- `taste-index similar "<show>" [-n N]` — nearest shows in taste-space.
-- `taste-index query --where "sweep>=8" --where "register<=4"` — filter by axis profile
+- `showtype/space.py`: vectors, Euclidean distance, k-NN, and profile query.
+- `showtype similar "<show>" [-n N]` — nearest shows in taste-space.
+- `showtype query --where "sweep>=8" --where "register<=4"` — filter by axis profile
   (axis tokens resolve by slug or substring: `sweep`, `auth`, `veris`, …).
 
 Both run over the stored scores with no API call. Sanity checks hold: The Wire's
@@ -24,8 +24,8 @@ Breaking Bad's are Happy Valley / Ozark / Better Call Saul (propulsive crime).
 Retrieval is only as good as the catalog is dense. Two ways to grow it:
 
 ```bash
-taste-index score-all   --file shows.txt --skip-existing   # sequential, full price
-taste-index score-batch --file shows.txt --skip-existing   # Batches API: 50% cost, async
+showtype score-all   --file shows.txt --skip-existing      # sequential, full price
+showtype score-batch --file shows.txt --skip-existing      # Batches API: 50% cost, async
 ```
 
 `score-batch` submits all requests to the Claude **Batches API**, polls until the
@@ -37,8 +37,8 @@ from `scripts/catalog-shows.txt` and `catalog-shows-2.txt`) built a 231-show cat
 committed at `docs/catalog-scores.csv`. Load it without re-spending:
 
 ```bash
-taste-index init-db && taste-index backfill --csv docs/catalog-scores.csv
-taste-index similar "The Bear" -n 6
+showtype init-db && showtype backfill --csv docs/catalog-scores.csv
+showtype similar "The Bear" -n 6
 ```
 
 At this density, nearest-neighbour distances tighten to ~2.8–4 (real matches) from
@@ -54,7 +54,7 @@ the 5–8 of the sparse 30-show space.
   feedback: `target = C_like + 0.5*(C_like - C_dislike)`, clamped to [0,10]) — liking
   The Expanse + BSG but disliking Black Mirror shifts the recs toward bigger, grounded
   systems shows (Andor, ZeroZeroZero, Chernobyl).
-- `taste_index/web.py` + `taste-index serve`: a zero-dependency web UI (stdlib
+- `showtype/web.py` + `showtype serve`: a zero-dependency web UI (stdlib
   `http.server`) — explore a show's axis profile and nearest neighbours, recommend from
   shows you like (and away from shows you don't), and **filter by axis profile** with
   min/max sliders per axis. JSON API at `/api/meta`, `/api/show`, `/api/similar`,

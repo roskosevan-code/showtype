@@ -1,4 +1,4 @@
-# The Taste Index — Scoring Rubric (v1)
+# Show Type — Scoring Rubric (v1)
 
 This document defines the eight axes used to characterize a TV show, how to score each one, and a set of calibration anchors that keep scoring consistent across the catalog. It has two uses: it is the reference a scorer (human or model) reads before scoring, and it is seeded verbatim into the `Axis` table in Phase 1. Revise this document — not code — when an axis is mis-reading.
 

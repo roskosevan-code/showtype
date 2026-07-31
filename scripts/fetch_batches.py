@@ -30,9 +30,9 @@ sys.path.insert(0, str(REPO))
 
 import anthropic  # noqa: E402
 
-from taste_index import db  # noqa: E402
-from taste_index.cli import _collect_titles, _normalize  # noqa: E402
-from taste_index.scorer import parse_message_scores  # noqa: E402
+from showtype import db  # noqa: E402
+from showtype.cli import _collect_titles, _normalize  # noqa: E402
+from showtype.scorer import parse_message_scores  # noqa: E402
 
 GENRES_CSV = REPO / "docs" / "genres.csv"
 QUALITY_CSV = REPO / "docs" / "quality.csv"

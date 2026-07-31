@@ -13,9 +13,9 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   - `docs/genres.csv` — `show,genre,rank` (curated 231 + model-classified 522)
   - `docs/quality.csv` — quality / summary / episodes / seasons
   - `docs/baseline-scores.csv` — 30-show diff reference
-- **App** (`taste_index/`): SQLite + retrieval (`space.py`) + zero-dep web UI (`web.py`).
-  `python3 -m taste_index serve` auto-builds the DB from the CSVs and serves the UI.
-- **Offline UI**: `docs/taste-index.html` (self-contained, ~5.1 MB) — rebuild with
+- **App** (`showtype/`): SQLite + retrieval (`space.py`) + zero-dep web UI (`web.py`).
+  `python3 -m showtype serve` auto-builds the DB from the CSVs and serves the UI.
+- **Offline UI**: `docs/showtype.html` (self-contained, ~5.1 MB) — rebuild with
   `python3 scripts/build_static.py`.
 
 ## Phases done
@@ -46,7 +46,7 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   steers via these targeted pushes *instead of* the blunt Rocchio centroid. Engine hook:
   `space.recommend(axis_pushes=…)` + `/api/recommend?push=axisId,delta`.
 
-Both are mirrored in the offline build (`scripts/build_static.py` → `docs/taste-index.html`);
+Both are mirrored in the offline build (`scripts/build_static.py` → `docs/showtype.html`);
 served + offline centroids verified identical.
 
 ## Polish done (after ②③)

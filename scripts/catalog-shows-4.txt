@@ -1,4 +1,4 @@
-# Catalog expansion, round 4 — for `taste-index score-batch --file`.
+# Catalog expansion, round 4 — for `showtype score-batch --file`.
 # 1110 new titles (deduped against the existing 753 and each other).
 # One title per line; lines starting with # are ignored.
 

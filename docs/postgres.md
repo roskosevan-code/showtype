@@ -1,6 +1,6 @@
 # PostgreSQL backend (optional)
 
-The Taste Index runs on **SQLite by default** — zero dependencies, nothing to set up.
+Show Type runs on **SQLite by default** — zero dependencies, nothing to set up.
 When the `DATABASE_URL` environment variable is set, the same code talks to **PostgreSQL**
 instead (via [psycopg](https://www.psycopg.org/) v3, imported lazily only on that path).
 The schema — `axis` / `show` / `show_genre` / `score`, with identical column names,
@@ -31,24 +31,24 @@ export DATABASE_URL='postgresql://postgres:pw@127.0.0.1:5432/taste'
 
 # One command: init schema + seed the 8 axes + backfill catalog + genres + quality,
 # all from the committed CSVs in docs/.
-python -m taste_index db-load
+python -m showtype db-load
 ```
 
 `db-load` is equivalent to running these individually (each honours `DATABASE_URL`):
 
 ```bash
-python -m taste_index init-db
-python -m taste_index backfill --csv docs/catalog-scores.csv
-python -m taste_index tag-genres
-python -m taste_index load-quality
+python -m showtype init-db
+python -m showtype backfill --csv docs/catalog-scores.csv
+python -m showtype tag-genres
+python -m showtype load-quality
 ```
 
 After loading, every read/query command works against Postgres transparently:
 
 ```bash
-python -m taste_index similar "The Wire" -n 5
-python -m taste_index query --where "sweep>=8" --where "register<=4"
-python -m taste_index serve            # web UI, backed by Postgres
+python -m showtype similar "The Wire" -n 5
+python -m showtype query --where "sweep>=8" --where "register<=4"
+python -m showtype serve               # web UI, backed by Postgres
 ```
 
 To go back to SQLite, just `unset DATABASE_URL` (the `--db` path is used again).
@@ -56,11 +56,11 @@ To go back to SQLite, just `unset DATABASE_URL` (the `--db` path is used again).
 ## Notes
 
 - **The offline build stays SQLite/zero-dependency.** `python scripts/build_static.py`
-  always produces `docs/taste-index.html` from SQLite, even if `DATABASE_URL` is set —
+  always produces `docs/showtype.html` from SQLite, even if `DATABASE_URL` is set —
   it forces the SQLite backend so the self-contained page never depends on psycopg or a
   running database.
-- **Schema parity.** SQLite uses `taste_index/schema.sql`; Postgres uses
-  `taste_index/schema_pg.sql` (same tables/columns/constraints, with
+- **Schema parity.** SQLite uses `showtype/schema.sql`; Postgres uses
+  `showtype/schema_pg.sql` (same tables/columns/constraints, with
   `GENERATED ALWAYS AS IDENTITY` PKs and `TIMESTAMP DEFAULT now()` timestamps). Both are
   idempotent (`CREATE TABLE IF NOT EXISTS` + an additive column migration).
 

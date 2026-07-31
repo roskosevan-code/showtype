@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build a single self-contained docs/taste-index.html — no server, no deps.
+"""Build a single self-contained docs/showtype.html — no server, no deps.
 
 Bakes every show's data into the page and provides a local-compute ENGINE with
 the same interface the served UI's fetch-based engine exposes (meta / show /
 similar / recommend / query). All markup, CSS, and UI logic are reused verbatim
-from taste_index.web (PAGE_HEAD + UI_JS), so the two builds cannot drift.
+from showtype.web (PAGE_HEAD + UI_JS), so the two builds cannot drift.
 
-    python3 scripts/build_static.py     # -> docs/taste-index.html (double-click to open)
+    python3 scripts/build_static.py     # -> docs/showtype.html (double-click to open)
 """
 from __future__ import annotations
 
@@ -24,10 +24,10 @@ os.environ.pop("DATABASE_URL", None)
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from taste_index import cli, db, space, web  # noqa: E402
+from showtype import cli, db, space, web  # noqa: E402
 
-DB = REPO / "taste_index.db"
-OUT = REPO / "docs" / "taste-index.html"
+DB = REPO / "showtype.db"
+OUT = REPO / "docs" / "showtype.html"
 
 # Local-compute twin of web.SERVED_ENGINE_JS, over the embedded DATA blob.
 # Same five async methods; the mirrored recommend logic (weighted centroid +

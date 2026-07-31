@@ -21,7 +21,7 @@ from anthropic.types.messages.batch_create_params import Request
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from taste_index.cli import _collect_titles  # noqa: E402
+from showtype.cli import _collect_titles  # noqa: E402
 
 GENRES_CSV = REPO / "docs" / "genres.csv"
 MODEL = "claude-opus-4-8"

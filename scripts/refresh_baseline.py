@@ -2,7 +2,7 @@
 """Re-score the gold set under the *current* rubric -> docs/baseline-scores.csv.
 
 This is the active diff reference: model-scored (claude-opus-4-8) under the
-current docs/rubric.md, so `taste_index diff` measures drift from a clean,
+current docs/rubric.md, so `showtype diff` measures drift from a clean,
 rubric-consistent baseline rather than the frozen Phase 0 hand-scores.
 
     ANTHROPIC_API_KEY=... python3 scripts/refresh_baseline.py
@@ -21,8 +21,8 @@ import anthropic
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from taste_index.rubric import load_rubric  # noqa: E402
-from taste_index.scorer import MODEL, score_show  # noqa: E402
+from showtype.rubric import load_rubric  # noqa: E402
+from showtype.scorer import MODEL, score_show  # noqa: E402
 
 PHASE0_CSV = REPO / "docs" / "phase0-scores.csv"
 OUT_CSV = REPO / "docs" / "baseline-scores.csv"

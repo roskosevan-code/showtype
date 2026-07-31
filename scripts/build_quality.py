@@ -4,7 +4,7 @@
 For every catalog title, Claude returns an evaluative execution score (0-10,
 distinct from the descriptive axes), a one-line justification, a spoiler-free
 summary, and approximate episode/season counts (its best estimate; null when
-unsure). Written to docs/quality.csv; load with `taste-index load-quality`.
+unsure). Written to docs/quality.csv; load with `showtype load-quality`.
 
     ANTHROPIC_API_KEY=... python3 scripts/build_quality.py
 """
@@ -23,7 +23,7 @@ from anthropic.types.messages.batch_create_params import Request
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from taste_index.cli import _collect_titles  # noqa: E402
+from showtype.cli import _collect_titles  # noqa: E402
 
 CATALOG_CSV = REPO / "docs" / "catalog-scores.csv"
 OUT = REPO / "docs" / "quality.csv"
