@@ -35,6 +35,32 @@ When an axis mis-reads, revise the definition and anchors in `docs/rubric.md` �
 `scorer.py`. The rubric self-corrected three times this way (Register ×2, Institutional
 Sweep ×1). `showtype.db` is disposable and rebuilt from the committed CSVs.
 
+## Deployment
+
+**showtype.tv** is GitHub Pages serving `docs/` off `main` — no CI, no build step beyond
+`build_static.py`. Push to `main` and the site updates within a minute.
+
+| Piece | Where |
+|---|---|
+| Entry point | `docs/index.html` — Pages serves it at `/`, so `build_static.py` writes there |
+| Custom domain | `docs/CNAME` (`showtype.tv`), verified against the account so nobody else can claim it |
+| Jekyll opt-out | `docs/.nojekyll` — without it Pages renders the `.md` files and drops any `_`-prefixed name |
+
+**Everything in `docs/` is a public URL.** `docs/rubric.md` is `showtype.tv/rubric.md`; the
+CSVs are downloadable. That's intended for the data, but nothing private can be staged
+there — a committed batch-ID record had to be pulled for exactly this reason, and
+`batches*.json` is now gitignored.
+
+**The TLS cert only issues once DNS already points at GitHub.** Setting the custom domain
+first (as happened here) leaves Pages serving its default `*.github.io` cert forever —
+GitHub never retries on its own, so `https://` fails a name check while `http://` looks
+fine. Fix: clear the custom domain and re-set it, which requests a fresh cert immediately.
+
+```bash
+gh api repos/roskosevan-code/showtype/pages -X PUT -F cname=null
+gh api repos/roskosevan-code/showtype/pages -X PUT -f cname=showtype.tv
+```
+
 ## Gotchas
 
 **The three catalog CSVs must agree on show count.** `catalog-scores.csv`, `genres.csv`,
