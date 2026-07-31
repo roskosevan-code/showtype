@@ -61,6 +61,11 @@ specific axes. See **The web UI** below.
 bottom sheet for detail, and the served and offline builds de-duplicated onto one shared
 UI layer.
 
+**Phase 6 — Public release (complete).** Renamed from "The Taste Index" to **Show Type**,
+MIT-licensed, and published at **<https://showtype.tv>** via GitHub Pages off `docs/`. A
+fourth **About** tab explains the eight axes for someone arriving cold. See **Deployment**
+in `CLAUDE.md` for how the site ships.
+
 **Catalog: 1863 shows**, each with 8 axis scores, ≥1 genre, and a quality row.
 
 [`docs/STATUS.md`](docs/STATUS.md) is the resume note — current state, what's next, and
@@ -104,10 +109,12 @@ no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8
 shows baked in; similarity/recommendation/filter reimplemented in client-side JS) — just
 open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
 
-The **web UI** (`serve`, stdlib `http.server`, no deps) is three tabs — **Explore** (a
-show's axis profile + nearest neighbours), **For You** (recommendations), and **Browse**
+The **web UI** (`serve`, stdlib `http.server`, no deps) is four tabs — **Explore** (a
+show's axis profile + nearest neighbours), **For You** (recommendations), **Browse**
 (filter by axis profile with min/max sliders per axis, e.g. Sweep 8–10 + Register 0–4 +
-Verisimilitude 8–10 → the restrained systems-storytelling cluster). Tapping any row opens
+Verisimilitude 8–10 → the restrained systems-storytelling cluster), and **About** (what
+the axes mean, how to start, and the caveats — descriptive vs evaluative, quality as a
+separate layer, model-generated scores). Tapping any row opens
 a bottom sheet (a centered modal on desktop ≥760px) with the summary, ranking and
 watch-state buttons, reason chips, and the taste profile.
 
@@ -128,7 +135,7 @@ Each complaint nudges its axis by ±1.5, summed across shows and capped at ±3 p
 reasoned dislike steers via these targeted pushes *instead of* the blunt centroid.
 Started-&-stopped is the only level that elicits reasons — never-interested is always blunt.
 
-All three (`ti-reactions` / `ti-watch` / `ti-reasons`) persist in `localStorage` and are
+All three (`st-reactions` / `st-watch` / `st-reasons`) persist in `localStorage` and are
 mirrored in the offline build.
 
 **Genre tags** (`docs/genres.csv` → `show_genre`, one *or more* genres per show; rank 0 is

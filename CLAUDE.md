@@ -92,8 +92,9 @@ with empty genres and null quality — this was a real bug in `build_static.py:e
 `SERVED_ENGINE_JS` (fetch adapters), and `UI_JS` (rendering/state/events);
 `build_static.py` reuses `PAGE_HEAD` + `UI_JS` verbatim and swaps in a local-compute
 `ENGINE` with the same 5-method interface (meta/show/similar/recommend/query). Edit the UI
-once in `web.py` — don't fork the static build. `localStorage` keys are `ti-reactions` /
-`ti-watch` / `ti-reasons`.
+once in `web.py` — don't fork the static build. `localStorage` keys are `st-reactions` /
+`st-watch` / `st-reasons` (plus `st-tab`); a load-time shim still migrates the pre-rename
+`ti-*` keys.
 
 **Never inline an API key on a command line.** Claude Code persists the literal command
 into `.claude/settings.local.json` permission rules, where it lingers in plaintext. Export

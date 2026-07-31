@@ -1,6 +1,7 @@
 # Where we left off
 
-Quick resume note (last updated after round-4 completed: catalog at 1863).
+Quick resume note (last updated 2026-07-31: public release — renamed to Show Type, live at
+<https://showtype.tv>; catalog still at 1863).
 
 ## State of the project
 
@@ -9,8 +10,8 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   reason, summary, approx episode/season counts).
 - **Data files** (all committed; the DB is rebuilt from these):
   - `docs/rubric.md` — the 8-axis rubric (source of truth)
-  - `docs/catalog-scores.csv` — 753 shows × 8 axes
-  - `docs/genres.csv` — `show,genre,rank` (curated 231 + model-classified 522)
+  - `docs/catalog-scores.csv` — 1863 shows × 8 axes (14,904 rows)
+  - `docs/genres.csv` — `show,genre,rank` (4023 tags over 1863 shows; 1357 multi-genre)
   - `docs/quality.csv` — quality / summary / episodes / seasons
   - `docs/baseline-scores.csv` — 30-show diff reference
 - **App** (`showtype/`): SQLite + retrieval (`space.py`) + zero-dep web UI (`web.py`).
@@ -32,12 +33,12 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   😐 fine (dropped) and 🚪 bounced watch-state into this scale. *(Superseded the original
   ❤/👍/😐/👎 + separate 🚪-bounced watch-state; the retired weight was Fine 0.4.)*
 - **Phase 4 ②** — watch-state, separate from affinity: 🔖 watchlist / 👁 seen
-  (haven't-seen = unset), stored in `localStorage` (`ti-watch`). *(🚪 bounced moved into the
+  (haven't-seen = unset), stored in `localStorage` (`st-watch`). *(🚪 bounced moved into the
   ① ranking as ⏹️ started-&-stopped.)* Seen is **excluded** from recommendations; a
   "From my watchlist only" toggle
   restricts recs to your watchlist (intersected with any genre filter). Engine hooks:
   `space.recommend(exclude_extra=…)` + `/api/recommend?seen=…&only=…`.
-- **Phase 4 ③** — "why I bounced" chips on every ⏹️ started-&-stopped show (`ti-reasons`),
+- **Phase 4 ③** — "why I bounced" chips on every ⏹️ started-&-stopped show (`st-reasons`),
   the only ranking level that elicits reasons: 6 everyday
   complaints → *masked per-axis* pushes (Too slow → Propulsion↑ · Hard to follow →
   Density↓ · Couldn't connect → Interiority↑ · Too try-hard → Authorial↓ · Didn't buy
@@ -72,7 +73,8 @@ served + offline centroids verified identical.
   `build_static.py` swaps in a local-compute `ENGINE` with the same 5-method interface
   (meta/show/similar/recommend/query) and reuses PAGE_HEAD + UI_JS verbatim — UI changes
   now land once instead of twice. Behavior (weights, Rocchio, pushes, migration of old
-  localStorage keys) is unchanged; storage keys still `ti-reactions`/`ti-watch`/`ti-reasons`.
+  localStorage keys) is unchanged; that refactor left the storage keys alone (`ti-*` then,
+  renamed to `st-*` in Phase 6).
 
 ## Round 4 — catalog expansion (complete)
 
@@ -96,12 +98,32 @@ served + offline centroids verified identical.
   new shows shipped with empty genres/null quality. Now it always reloads all CSVs (loaders
   are idempotent). The pre-fix 957-show HTML had this gap too.
 
+## Phase 6 — public release (2026-07-31)
+
+- **Renamed** "The Taste Index" → **Show Type**, top to bottom: package (`taste_index/` →
+  `showtype/`), CLI, DB path, offline build (`docs/taste-index.html` → `docs/index.html`),
+  docs, and the UI's display name. GitHub repo is now `roskosevan-code/showtype`.
+  `localStorage` keys went `ti-*` → `st-*` with a load-time migration that copies the old
+  values across (old keys left in place); that migration can go once nobody arrives from a
+  pre-rename page.
+- **Fourth tab: About.** What the project is, a getting-started step per tab, a
+  plain-language gloss + poles for each axis, and the caveats (descriptive vs evaluative,
+  quality as a separate layer, what Δ means, nothing leaves the browser, scores are
+  model-generated). Axis names/codes render from the data so they can't drift; the prose is
+  hardcoded in `UI_JS` — **if you revise an axis in `docs/rubric.md`, check that copy.**
+- **MIT-licensed** (code and the generated CSVs alike) and the repo is public. Provenance
+  note in the README states the scores are Claude-generated, not critic or viewer ratings.
+- **Live at <https://showtype.tv>** — GitHub Pages from `docs/` on `main`, custom domain
+  verified, HTTPS enforced. Setup and the two deployment traps are in `CLAUDE.md`.
+- Dropped `docs/round4-main-batches.json` (everything in `docs/` is now a public URL) and
+  removed the inlined `ANTHROPIC_API_KEY=...` from all five batch-script usage examples.
+
 ## Next up — ideas (nothing agreed yet)
 
 - A dedicated **watchlist view** (currently surfaced only via the toggle + a count line).
 - Tune the push magnitudes (±1.5 step, ±3 cap) against real usage.
-- Bigger: a round-5 catalog expansion past 1863, or publish the offline HTML (e.g. GitHub
-  Pages — note it's ~5.1 MB now, so size is worth a thought first).
+- A round-5 catalog expansion past 1863. Note the offline page is already ~5.1 MB, so a
+  bigger catalog wants a size strategy first (it's one static file over the wire).
 
 Design principle settled: **user thinks in words, engine thinks in weights**; keep ≤5
 options at the top level and push richer vocabulary one layer down (progressive disclosure).
