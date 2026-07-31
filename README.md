@@ -100,7 +100,7 @@ SQLite/zero-dependency regardless. Details in [`docs/postgres.md`](docs/postgres
 committed CSVs on first run — so from a fresh clone it's a single command, no API key and
 no dependencies (the UI is pure standard library). Then open <http://127.0.0.1:8000>.
 
-**No Python at all?** `docs/showtype.html` is a single self-contained file (all 1863
+**No Python at all?** `docs/index.html` is a single self-contained file (all 1863
 shows baked in; similarity/recommendation/filter reimplemented in client-side JS) — just
 open it in a browser. Rebuild with `python scripts/build_static.py` after the data changes.
 
@@ -175,12 +175,14 @@ docs/
   genres.csv                    # show,genre,rank — one or more genres per show; load with `tag-genres`
   quality.csv                   # (generated) model-judged quality + summary + episodes; load with `load-quality`
   postgres.md                   # optional PostgreSQL backend: setup, db-load, parity tests
-  showtype.html                 # (generated) self-contained offline UI; open in any browser
+  index.html                    # (generated) self-contained offline UI; open in any browser
+  CNAME                         # GitHub Pages custom domain (showtype.tv)
+  .nojekyll                     # serve docs/ verbatim — no Jekyll processing
 scripts/
   gen_phase0.py                 # Source of truth for the two phase0 files; re-run to regenerate
   refresh_baseline.py           # Re-score the gold set -> docs/baseline-scores.csv (run after rubric edits)
   gen_genres.py                 # Author/validate docs/genres.csv (genre buckets -> flat CSV)
-  build_static.py               # Bake the catalog into a self-contained docs/showtype.html
+  build_static.py               # Bake the catalog into a self-contained docs/index.html
   classify_genres.py            # Batches-API genre classifier for bulk-added shows
   build_quality.py              # Batches-API quality/summary/episode pass -> docs/quality.csv
 showtype/                       # Phase 1 package

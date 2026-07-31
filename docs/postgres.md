@@ -56,7 +56,7 @@ To go back to SQLite, just `unset DATABASE_URL` (the `--db` path is used again).
 ## Notes
 
 - **The offline build stays SQLite/zero-dependency.** `python scripts/build_static.py`
-  always produces `docs/showtype.html` from SQLite, even if `DATABASE_URL` is set —
+  always produces `docs/index.html` from SQLite, even if `DATABASE_URL` is set —
   it forces the SQLite backend so the self-contained page never depends on psycopg or a
   running database.
 - **Schema parity.** SQLite uses `showtype/schema.sql`; Postgres uses

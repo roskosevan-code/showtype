@@ -15,7 +15,7 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   - `docs/baseline-scores.csv` — 30-show diff reference
 - **App** (`showtype/`): SQLite + retrieval (`space.py`) + zero-dep web UI (`web.py`).
   `python3 -m showtype serve` auto-builds the DB from the CSVs and serves the UI.
-- **Offline UI**: `docs/showtype.html` (self-contained, ~5.1 MB) — rebuild with
+- **Offline UI**: `docs/index.html` (self-contained, ~5.1 MB) — rebuild with
   `python3 scripts/build_static.py`.
 
 ## Phases done
@@ -46,7 +46,7 @@ Quick resume note (last updated after round-4 completed: catalog at 1863).
   steers via these targeted pushes *instead of* the blunt Rocchio centroid. Engine hook:
   `space.recommend(axis_pushes=…)` + `/api/recommend?push=axisId,delta`.
 
-Both are mirrored in the offline build (`scripts/build_static.py` → `docs/showtype.html`);
+Both are mirrored in the offline build (`scripts/build_static.py` → `docs/index.html`);
 served + offline centroids verified identical.
 
 ## Polish done (after ②③)

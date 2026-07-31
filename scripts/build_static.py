@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build a single self-contained docs/showtype.html — no server, no deps.
+"""Build a single self-contained docs/index.html — no server, no deps.
 
 Bakes every show's data into the page and provides a local-compute ENGINE with
 the same interface the served UI's fetch-based engine exposes (meta / show /
 similar / recommend / query). All markup, CSS, and UI logic are reused verbatim
 from showtype.web (PAGE_HEAD + UI_JS), so the two builds cannot drift.
 
-    python3 scripts/build_static.py     # -> docs/showtype.html (double-click to open)
+    python3 scripts/build_static.py     # -> docs/index.html (double-click to open)
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ sys.path.insert(0, str(REPO))
 from showtype import cli, db, space, web  # noqa: E402
 
 DB = REPO / "showtype.db"
-OUT = REPO / "docs" / "showtype.html"
+OUT = REPO / "docs" / "index.html"
 
 # Local-compute twin of web.SERVED_ENGINE_JS, over the embedded DATA blob.
 # Same five async methods; the mirrored recommend logic (weighted centroid +
