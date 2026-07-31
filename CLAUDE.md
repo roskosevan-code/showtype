@@ -54,7 +54,8 @@ the end, so the counter reads 0 for the whole run (90 min on round 4). Let it fi
 **cancel to force a flush** — cancelling recovers the already-completed results (~95%).
 This has cost real time twice. Recover with `scripts/fetch_batches.py` (custom_id prefixes:
 `sh`=scores, `g`=genres, `q`=quality), then live-patch the stragglers via `messages.create`
-reusing `params()` from the batch scripts. Batch IDs land in `docs/round4-main-batches.json`.
+reusing `params()` from the batch scripts. `submit_batches.py --out` records the batch IDs;
+keep that file out of `docs/` (it is published to showtype.tv) — `batches*.json` is ignored.
 
 **Scores and metadata take different paths into the DB.** `score-all`/`fetch_batches.py`
 write scores straight to the DB, but genres and quality land only in the CSVs. Anything

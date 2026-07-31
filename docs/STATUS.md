@@ -88,7 +88,7 @@ served + offline centroids verified identical.
 - **Main expansion (1110 titles, `scripts/catalog-shows-4.txt`): DONE.** 906 new per pass.
   Batches sat at 0-succeeded again; cancel-to-flush recovered ~95% (865/873/864 of 906), and
   the 41/33/45 canceled/failed stragglers were live-patched — all three passes now 1110/1110.
-  Batch IDs are in `docs/round4-main-batches.json`. Dropped 3 orphan quality rows (garbled/
+  (The round-4 batch-ID record is no longer committed.) Dropped 3 orphan quality rows (garbled/
   non-catalog `show` names from `_resolve` fallback) to restore CSV parity (all three = 1863).
 - **Fixed a latent offline-build bug:** `scripts/build_static.py:ensure_db` used to skip
   genres/quality loading whenever the `show` table was non-empty — but scores get written to

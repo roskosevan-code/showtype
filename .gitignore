@@ -6,6 +6,10 @@
 .env.*
 *.local
 
+# Batch-ID records from submit_batches.py --out. Account-scoped identifiers, and
+# anything under docs/ is published to showtype.tv — keep them out of the repo.
+batches*.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
